@@ -1,0 +1,129 @@
+const AWS = require("aws-sdk");
+
+/**
+ * Obtener Detalle de documento
+ * @param {} id
+ */
+const obtenerDetalleDocumento = async(id)=>{
+    let DynamoDB = new AWS.DynamoDB.DocumentClient();
+    const tablaDynamo = "tbDetalleDocumento-dev";
+
+    var respuesta={
+        statusCod:true,
+        statusDesc:""
+      }
+    let params = {
+        TableName:tablaDynamo,
+        Key:{
+            "id_documento":parseInt(id)
+        }
+    };
+
+    try{
+        const data= await DynamoDB.get(params).promise();
+      
+        //Extraemos ultimo id
+        if(data){
+            respuesta.statusCod=true;
+            respuesta.statusDesc="";
+            respuesta.documentos = data.Item;
+        }else{
+            respuesta.statusCod=false;
+            respuesta.statusDesc=`No se encontraron registros para el documento número ${id}`;
+        }
+
+    }catch(e){/**Error*/
+       
+        respuesta.statusCod="ERR";
+        respuesta.statusDesc=e.message;
+      }
+     
+      return respuesta;
+
+    
+    
+}
+/**
+ * Obtener id Documento
+ * @param {} oc_oro
+ */
+ const obtenerIdDocumento = async(oc_oro)=>{
+    let DynamoDB = new AWS.DynamoDB.DocumentClient();
+    const tablaDynamo = "tbDocumentoOc-dev";
+
+    var respuesta={
+        statusCod:true,
+        statusDesc:""
+      }
+
+      let params = {
+        TableName:tablaDynamo
+    };
+
+    try{
+        const data= await DynamoDB.scan(params).promise();
+
+        if(data){
+            const idDocumento = data.Items.filter(iddc=> iddc.id_documento === oc_oro);
+          
+            respuesta.statusCod=true;
+            respuesta.statusDesc="";
+            respuesta.idDoc = idDocumento[0].oc_oro;
+        }else{
+            respuesta.statusCod=false;
+            respuesta.statusDesc=`No se encontraron registros para el documento número ${oc_oro}`;
+        }
+
+    }catch(e){/**Error*/
+       
+        respuesta.statusCod="ERR";
+        respuesta.statusDesc=e.message;
+      }
+     console.log(respuesta);
+      return respuesta;
+    
+}
+
+const obtenerListaDocumentos = async()=>{
+    let DynamoDB = new AWS.DynamoDB.DocumentClient();
+    const tablaDynamo = "tbDocumentoOc-dev";
+
+    var respuesta={
+        statusCod:true,
+        statusDesc:""
+      }
+
+      let params = {
+        TableName:tablaDynamo
+    };
+
+    try{
+        const data= await DynamoDB.scan(params).promise();
+
+        if(data){
+         
+          
+            respuesta.statusCod=true;
+            respuesta.statusDesc="";
+            respuesta.documentos = data;
+        }else{
+            respuesta.statusCod=false;
+            respuesta.statusDesc=`No se encontraron registros`;
+        }
+
+    }catch(e){/**Error*/
+       
+        respuesta.statusCod="ERR";
+        respuesta.statusDesc=e.message;
+      }
+     
+      return respuesta;
+}
+
+module.exports = {
+    obtenerDetalleDocumento,
+    obtenerIdDocumento,
+    obtenerListaDocumentos
+    
+    
+}

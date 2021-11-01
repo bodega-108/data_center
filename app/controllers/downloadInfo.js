@@ -1,0 +1,254 @@
+const axios = require('axios').default;
+
+/**
+ * Funcion para generarToken de oro
+ * 
+ */
+const autenticarOro = async()=>{
+    console.clear();
+    let resultado;
+    //Rescatamos variables
+    const client_id = process.env.CLIENT_ID_ORO;
+    const client_secret = process.env.CLIENTE_SECRET_ORO;
+        await axios({
+            method: 'POST',
+            url:`${process.env.ORO_SITE_PATH}/oauth2-token`,
+            headers: {'Content-Type': 'application/json'},
+            data:{
+                client_id,
+                client_secret,
+                grant_type:'password',
+                username:'admin',
+                password:process.env.PASSWORD,
+            }
+        }).then(res =>{
+            
+            resultado = res.data;
+
+        }).catch((err) =>{
+            console.log(err);
+        });
+        return resultado;
+}
+
+/**
+ * Llar lista de OC por cliente
+ * @param {*} id; 
+ */
+const obtenerOCListaCliente= async (id) =>{
+
+    console.clear();
+    let respuesta = {   
+        statusCod: true,
+        statusDesc: "" 
+    }
+    try {
+        //Obtenemos Token
+       let token = await autenticarOro();
+       if(token){
+           await axios.get(
+               `${process.env.ORO_SITE_PATH}/3m0nk_admin/api/orders?fields[customer]=${id}`,
+               {headers: { 'Authorization': `Bearer ${token.access_token}` }}
+           ).then(res =>{
+               respuesta.statusCod = true;
+               respuesta.statusDesc = `Lista de OC para el cliente ${id}`,
+               respuesta.data = res.data
+           }).catch(err =>{
+               console.log(err);
+               respuesta.statusCod = false;
+               respuesta.statusDesc = `Error al obtener lista de oc para el cliente con el id ${id}` ;
+           })
+       }else{
+        respuesta.statusCod = false;
+        respuesta.statusDesc = "Error al obtener el token";
+       }
+
+    } catch (error) {
+        log.error(error);
+        console.log(error);
+        respuesta.statusCod = false;
+        respuesta.statusDesc = "Error al obtener ejecutar metodo " + error;
+    }
+
+    return respuesta;
+}
+
+/**
+ * Obtener data de oc por id
+ * @param {number} id_oc;
+ */
+const obtenerDetalleOc = async(id_oc) => {
+    console.clear();
+    let respuesta = {   
+        statusCod: true,
+        statusDesc: "" 
+    }
+    try {
+        //Obtenemos Token
+       let token = await autenticarOro();
+       if(token){
+           await axios.get(
+               `${process.env.ORO_SITE_PATH}/3m0nk_admin/api/orders/${id_oc}`,
+               {headers: { 'Authorization': `Bearer ${token.access_token}` }}
+           ).then(res =>{
+               respuesta.statusCod = true;
+               respuesta.statusDesc = `Detalle de OC con el id ${id_oc}`,
+               respuesta.data = res.data
+           }).catch(err =>{
+               console.log(err);
+               respuesta.statusCod = false;
+               respuesta.statusDesc = `Error al obtener oc para el cliente con el id ${id_oc}` ;
+           })
+       }else{
+        respuesta.statusCod = false;
+        respuesta.statusDesc = "Error al obtener el token";
+       }
+
+    } catch (error) {
+        log.error(error);
+        console.log(error);
+        respuesta.statusCod = false;
+        respuesta.statusDesc = "Error al obtener ejecutar metodo " + error;
+    }
+
+    return respuesta;
+}
+
+/**
+ * Obtener todas las oc
+ * 
+ */
+ const obtenerTodasLasOc = async() => {
+    console.clear();
+    let respuesta = {   
+        statusCod: true,
+        statusDesc: "" 
+    }
+    try {
+        //Obtenemos Token
+       let token = await autenticarOro();
+       if(token){
+           await axios.get(
+               `${process.env.ORO_SITE_PATH}/3m0nk_admin/api/orders?fields[customers]=1&page[number]=1&page[size]=200&sort=id`,
+               {headers: { 
+                   'Authorization': `Bearer ${token.access_token}`,
+                    'Content-Type': 'application/vnd.api+json'
+                 }
+                }
+           ).then(res =>{
+               respuesta.statusCod = true;
+               respuesta.statusDesc = `Lista de OC`,
+               respuesta.data = res.data
+           }).catch(err =>{
+               console.log(err);
+               respuesta.statusCod = false;
+               respuesta.statusDesc = `Error al obtener oc para el cliente con el id ${id_oc}` ;
+           })
+       }else{
+        respuesta.statusCod = false;
+        respuesta.statusDesc = "Error al obtener el token";
+       }
+
+    } catch (error) {
+        log.error(error);
+        console.log(error);
+        respuesta.statusCod = false;
+        respuesta.statusDesc = "Error al obtener ejecutar metodo " + error;
+    }
+    return respuesta;
+}
+
+/**
+ * Obtener nuevo registro oc desde oro
+ */
+const ultimaOc = async()=>{
+    console.clear();
+    let respuesta = {   
+        statusCod: true,
+        statusDesc: "" ,
+        idListaOcOro:[]
+    }
+    let listaIdOc = [];
+    //Obtenemos el total de ocs
+    try {
+        let listaOc = await obtenerTodasLasOc();
+        if(listaOc.statusCod){
+            let cantidadDeRegistros = listaOc.data.data.length;
+            for(let i=0; i< cantidadDeRegistros; i++){   
+                listaIdOc.push(listaOc.data.data[i].id);
+            }
+            respuesta.statusCod = true;
+            respuesta.statusDesc = "Lista de id oc oro";
+            respuesta.idListaOcOro = listaIdOc;
+        }else{
+            respuesta.statusCod = false;
+            respuesta.statusDesc = "Error al obtener Lista de Oc";
+        }
+    } catch (error) {       
+        console.log(error);
+        respuesta.statusCod = false;
+        respuesta.statusDesc = "Error al obtener ejecutar metodo " + error;
+    }
+    // console.log(respuesta);
+    return respuesta;
+}
+
+/**
+ * Obtener Nuevos registros por dia
+ */
+const nuevosRegistrosDiarios= async()=>{
+    let respuesta = {   
+        statusCod: true,
+        statusDesc: "" 
+    }
+    try {
+        //Obtenemos Token
+       let token = await autenticarOro();
+       
+       let fecha = new Date().toISOString().split("T");
+       let dia = (parseInt(fecha[0].split("-")[2])-1).toString();
+    
+       
+       let fechaFinal = fecha[0].split('-');
+       fechaFinal[2]=dia;
+      
+       
+       if(token){
+           await axios.get(
+               `${process.env.ORO_SITE_PATH}/3m0nk_admin/api/orders?filter[createdAt][gte]=${fechaFinal.toString().replace(/,/g, '-')}T01:00:58.204Z&page[number]=1&page[size]=50&sort=id`,
+               {headers: { 
+                   'Authorization': `Bearer ${token.access_token}`,
+                    'Content-Type': 'application/vnd.api+json'
+                 }
+                }
+           ).then(res =>{
+               respuesta.statusCod = true;
+               respuesta.statusDesc = `Lista de OC`,
+               respuesta.data = res.data.data
+           }).catch(err =>{
+               console.log(err);
+               respuesta.statusCod = false;
+               respuesta.statusDesc = `Error al obtener oc para el cliente con el id ${id_oc}` ;
+           })
+       }else{
+        respuesta.statusCod = false;
+        respuesta.statusDesc = "Error al obtener el token";
+       }
+
+    } catch (error) {
+        log.error(error);
+        console.log(error);
+        respuesta.statusCod = false;
+        respuesta.statusDesc = "Error al obtener ejecutar metodo " + error;
+    }
+   
+    return respuesta;
+}
+module.exports = {
+    autenticarOro,
+    obtenerOCListaCliente,
+    obtenerDetalleOc,
+    obtenerTodasLasOc,
+    ultimaOc,
+    nuevosRegistrosDiarios
+}
