@@ -48,6 +48,7 @@ const obtenerDetalleDocumento = async(id)=>{
  * @param {} oc_oro
  */
  const obtenerIdDocumento = async(oc_oro)=>{
+     console.log("El id a buscar es :" + oc_oro);
     let DynamoDB = new AWS.DynamoDB.DocumentClient();
     const tablaDynamo = "tbDocumentoOc-dev";
 
@@ -62,9 +63,9 @@ const obtenerDetalleDocumento = async(id)=>{
 
     try{
         const data= await DynamoDB.scan(params).promise();
-
+        console.log(data);
         if(data){
-            const idDocumento = data.Items.filter(iddc=> iddc.id_documento === oc_oro);
+            const idDocumento = data.Items.filter(iddc=> iddc.oc_oro === (oc_oro).toString());
           
             respuesta.statusCod=true;
             respuesta.statusDesc="";
@@ -77,7 +78,7 @@ const obtenerDetalleDocumento = async(id)=>{
     }catch(e){/**Error*/
        
         respuesta.statusCod="ERR";
-        respuesta.statusDesc=e.message;
+        respuesta.statusDesc=`Error al intentar obtener documento ${e.message}`;
       }
      console.log(respuesta);
       return respuesta;
@@ -116,6 +117,7 @@ const obtenerListaDocumentos = async()=>{
         respuesta.statusCod="ERR";
         respuesta.statusDesc=e.message;
       }
+      
      
       return respuesta;
 }

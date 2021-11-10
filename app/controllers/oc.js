@@ -58,14 +58,14 @@ const getDetalleDocumento = async(req,res =response) => {
 }
 
 const asociarNV = async(req, res= response) => {
-    const {id_documento,folio,mes,year} = req.body;
+    const {id_oc_oro,id_documento,folio,mes,year} = req.body;
     
     const resultado = await asociarNv(id_documento,folio,year,mes);
 
 
     if(resultado.statusCod){
 
-         await actualizarDocumento(68,folio,"SIN REGISTRO");
+         await actualizarDocumento(id_documento,id_oc_oro,folio,"SIN REGISTRO");
     
         res.json({
             ok: true,

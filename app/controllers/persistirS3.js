@@ -1,7 +1,7 @@
 const AWS = require("aws-sdk");
 const { v4: uuidv4 } = require('uuid');
-const {ultimaOc,obtenerDetalleOc} = require('./downloadinfo');
-const { obtenerDetalleDocumento,obtenerIdDocumento } = require("./getInfoAws");
+const {ultimaOc,obtenerDetalleOc,obtenerTodasLasOc,obtenerProductosOC} = require('./downloadinfo');
+const { obtenerDetalleDocumento,obtenerIdDocumento,obtenerListaDocumentos } = require("./getInfoAws");
 const {obtenerDetalleNv} = require('./infoSoftne');
 
 
@@ -23,7 +23,7 @@ AWS.config.update({
  * @param idNVSherpa
  */
 const crearDocumento = async(idOcOro,idNVSoftnet,idNVSherpa)=>{
-    
+    console.log("iniciando creacion de documento");
     let DynamoDB = new AWS.DynamoDB.DocumentClient();
     const tablaDynamo = "tbDocumentoOc-dev";
 
@@ -97,6 +97,7 @@ const obtenerUltimoNumeroTabla = async()=>{
         respuesta.statusCod="ERR";
         respuesta.statusDesc=e.message;
       }
+      console.log(respuesta);
       return respuesta;
 }
 
@@ -108,11 +109,17 @@ const migrateOroCommerce = async()=>{
   const listaDeId = await ultimaOc();
   console.log(listaDeId);
   try {
-   // await crearDocumento(listaDeId.idListaOcOro[1].toString(),"","");
+    let listadoDocumentos = await obtenerListaDocumentos(); 
+    console.log(listadoDocumentos.documentos.Items[0].id_documento);
+    console.log(listadoDocumentos.documentos.Items[0].oc_oro);
    //await setOcOro(parseInt(listaDeId.idListaOcOro[10])); 
-    for(let i=0; i<listaDeId.idListaOcOro.length;i++){
-      await setOcOro(parseInt(listaDeId.idListaOcOro[i]));
-     }
+       for(let i=0; i<listadoDocumentos.documentos.Items.length;i++){
+         // await crearDocumento(listaDeId.idListaOcOro[i].toString(),"","");
+         console.log("id documento: " + listadoDocumentos.documentos.Items[i].id_documento);
+         console.log("id oc oro: " + listadoDocumentos.documentos.Items[i].oc_oro);
+       const almacenado =   await setOcOro(listadoDocumentos.documentos.Items[i].id_documento,parseInt(listadoDocumentos.documentos.Items[i].oc_oro));
+         console.log(almacenado);
+       }
 
      
   } catch (error) {
@@ -125,7 +132,7 @@ const migrateOroCommerce = async()=>{
  * Persistir data de oc oro
  * @param {} id;
  */
-const setOcOro = async(id)=>{
+const setOcOro = async(id_documento,id)=>{
   let DynamoDB = new AWS.DynamoDB.DocumentClient();
   const tablaDynamo = "tbDetalleDocumento-dev";
   var respuesta={
@@ -134,7 +141,7 @@ const setOcOro = async(id)=>{
     }
 
   let detalleOc = {
-    "id" : id,
+    "id_oc" : id,
     "createdAt": "",
     "moneda":"",
     "subtotal":"",
@@ -147,40 +154,52 @@ const setOcOro = async(id)=>{
       "pago":"",
       "factura":"",
       "entrega":""
-    }
+    },
+    "lista_de_productos":""
 
   }
     try {
       const oc = await obtenerDetalleOc(id); 
-      if(oc.statusCod){
+      if(oc.statusCod){ 
 
-        let params = {
-          TableName:tablaDynamo,
-            Item:{
-              "id_documento":id,
-              "oc_oro": "",
-              "nv_sherpa":"SIN NV ASOCIADA",
-              "nv_sofnet":"SIN NV SHERPA ASOCIADA"
-            }
-          };
+        const listaProductos = await obtenerProductosOC(id);
 
-        detalleOc.createdAt = oc.data.createdAt;
-        detalleOc.moneda = oc.data.currency;
-        detalleOc.subtotal = oc.data.subtotalValue;
-        detalleOc.total = oc.data.totalValue;
-        detalleOc.descuento = oc.data.discount;
-        detalleOc.organizacion = oc.data.billingAddress.organization;
-        detalleOc.usuario = `${oc.data.billingAddress.firstName} ${oc.data.billingAddress.lastName}`,
-        detalleOc.pais =oc.data.billingAddress.country;
-        detalleOc.status.pago = oc.data.summa_payment_status;
-        detalleOc.status.factura = oc.data.summa_invoice_status;
-        detalleOc.status.entrega = oc.data.summa_shipping_status;
+        if(listaProductos.statusCod){
 
-          params.Item.oc_oro = detalleOc;
-          const data= await DynamoDB.put(params).promise();
-          respuesta.statusCod = true;
-          respuesta.statusDesc = "Registro almacenado con exito";
+          let params = {
+            TableName:tablaDynamo,
+              Item:{
+                "id_documento":id_documento,
+                "oc_oro": "",
+                "nv_softnet":"SIN NV ASOCIADA",
+                "nv_sherpa":"SIN NV SHERPA ASOCIADA"
+                
+              }
+            };
 
+            detalleOc.createdAt = oc.data.createdAt;
+            detalleOc.moneda = oc.data.currency;
+            detalleOc.subtotal = oc.data.subtotalValue;
+            detalleOc.total = oc.data.totalValue;
+            detalleOc.descuento = oc.data.discount;
+            detalleOc.organizacion = oc.data.billingAddress.organization;
+            detalleOc.usuario = `${oc.data.billingAddress.firstName} ${oc.data.billingAddress.lastName}`,
+            detalleOc.pais =oc.data.billingAddress.country;
+            detalleOc.status.pago = oc.data.summa_payment_status;
+            detalleOc.status.factura = oc.data.summa_invoice_status;
+            detalleOc.status.entrega = oc.data.summa_shipping_status;
+            detalleOc.lista_de_productos = listaProductos.lista_de_productos;
+
+            params.Item.oc_oro = detalleOc;
+            const data= await DynamoDB.put(params).promise();
+            respuesta.statusCod = true;
+            respuesta.statusDesc = "Registro almacenado con exito";
+        
+      }else{
+          console.log("No se pudo obtener lista de productos");
+          respuesta.statusCod = false;
+          respuesta.statusDesc = "No se pudo obtener lista de productos"
+        }
       }else{
         respuesta.statusCod = false;
         respuesta.statusDesc = "No se encontraron registros con el id " + id;
@@ -220,7 +239,7 @@ const asociarNv = async(id_documento,folio,mes,year) => {
           Item:{
             "id_documento":id_documento,
             "oc_oro":detalleOcOro.documentos.oc_oro,
-            "nv_sofnet":detalleFacturaSoftnet.data,
+            "nv_softnet":detalleFacturaSoftnet.data,
             "nv_sherpa":"SIN NV SHERPA ASOCIADA"
           }
         }
@@ -245,7 +264,7 @@ const asociarNv = async(id_documento,folio,mes,year) => {
  * @param idNVSoftnet
  * @param idNVSherpa
  */
- const actualizarDocumento = async(idOcOro,idNVSoftnet,idNVSherpa)=>{
+ const actualizarDocumento = async(id_documento,idOcOro,idNVSoftnet,idNVSherpa)=>{
     
   let DynamoDB = new AWS.DynamoDB.DocumentClient();
   const tablaDynamo = "tbDocumentoOc-dev";
@@ -258,18 +277,18 @@ const asociarNv = async(id_documento,folio,mes,year) => {
   let params = {
       TableName:tablaDynamo,
       Item:{
-          "id_documento":0,
+          "id_documento":id_documento,
           "oc_oro": idOcOro.toString(),
-          "nv_sherpa":idNVSherpa.toString(),
-          "nv_sofnet":idNVSoftnet.toString()
+          "nv_sherpa":"",
+          "nv_softnet":idNVSoftnet.toString()
       }
     };
-    
+    console.log(params);
     try{     
       //Obtenemos el ultimo ID de documento
       const documento = await obtenerIdDocumento(idOcOro);
-      params.Item.id_documento = parseInt(documento.idDoc);
-
+     
+      // params.Item.nv_softnet = parseInt(documento.idDoc);
           const data= await DynamoDB.put(params).promise();
           respuesta.statusDesc = data;
           respuesta.statusCod=true;
@@ -277,15 +296,78 @@ const asociarNv = async(id_documento,folio,mes,year) => {
   }catch(e){/**Error*/
      console.log(e);
       respuesta.statusCod="ERR";
-      respuesta.statusDesc=e.message;
+      respuesta.statusDesc=`Error al intentar acutalizar documento ${e.message}`;
     }
     return respuesta;
 } 
+
+/**
+ * Obtener lista de oc nuevas
+ * 
+ */
+
+const nuevasOc = async()=>{
+  
+  let respuesta = {
+    statusCod:true,
+    statusDesc:""
+  };
+
+  try {
+    const listaAWS = await obtenerListaDocumentos();
+   
+    const listaOC = await obtenerTodasLasOc();
+    //  console.log(listaOC.data.data);
+
+    if(listaAWS.documentos.Count != listaOC.data.data.length ){
+
+      let listaIdOCAWS = [];
+      let nuevosRegistros = [];
+      
+      for(let i = 0; i < listaAWS.documentos.Items.length; i++){
+        listaIdOCAWS.push(listaAWS.documentos.Items[i].oc_oro);
+      }
+
+      for(let i=0; i<listaOC.data.data.length; i++){
+        
+        if(listaIdOCAWS.includes(listaOC.data.data[i].id)){
+          console.log("Existe el registro");
+        }else{
+          console.log("No Existe el registro");
+          nuevosRegistros.push(listaOC.data.data[i].id);
+        }
+      }
+
+      if(nuevosRegistros.length > 0){
+        respuesta.statusCod =true;
+        respuesta.statusDesc="Se encontraron nuevos registros";
+        respuesta.nuevasOc = nuevosRegistros
+      }else{
+        respuesta.statusCod =false;
+        respuesta.statusDesc="No see encontraron nuevos registros";
+       
+      }
+      
+    }else{
+      console.log("sin registros nuevos");
+      respuesta.statusCod = false;
+      respuesta.statusDesc ="No hay registros nuevos";
+    }
+
+  } catch (error) {
+    console.log(error);
+    respuesta.statusCod = false;
+    respuest.statusDesc = `Ha ocurrido un error al obtener nuevas oc`;
+  }
+  return respuesta;
+}
 
 module.exports = {
   migrateOroCommerce,
   crearDocumento,
   setOcOro,
   asociarNv,
-  actualizarDocumento
+  actualizarDocumento,
+  nuevasOc,
+  obtenerUltimoNumeroTabla
 }

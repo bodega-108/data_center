@@ -5,7 +5,7 @@ const axios = require('axios').default;
  * 
  */
 const autenticarOro = async()=>{
-    console.clear();
+ 
     let resultado;
     //Rescatamos variables
     const client_id = process.env.CLIENT_ID_ORO;
@@ -37,7 +37,7 @@ const autenticarOro = async()=>{
  */
 const obtenerOCListaCliente= async (id) =>{
 
-    console.clear();
+
     let respuesta = {   
         statusCod: true,
         statusDesc: "" 
@@ -78,7 +78,7 @@ const obtenerOCListaCliente= async (id) =>{
  * @param {number} id_oc;
  */
 const obtenerDetalleOc = async(id_oc) => {
-    console.clear();
+
     let respuesta = {   
         statusCod: true,
         statusDesc: "" 
@@ -119,7 +119,7 @@ const obtenerDetalleOc = async(id_oc) => {
  * 
  */
  const obtenerTodasLasOc = async() => {
-    console.clear();
+
     let respuesta = {   
         statusCod: true,
         statusDesc: "" 
@@ -155,6 +155,7 @@ const obtenerDetalleOc = async(id_oc) => {
         respuesta.statusCod = false;
         respuesta.statusDesc = "Error al obtener ejecutar metodo " + error;
     }
+    console.log(respuesta.data.data.length);
     return respuesta;
 }
 
@@ -162,7 +163,7 @@ const obtenerDetalleOc = async(id_oc) => {
  * Obtener nuevo registro oc desde oro
  */
 const ultimaOc = async()=>{
-    console.clear();
+
     let respuesta = {   
         statusCod: true,
         statusDesc: "" ,
@@ -204,11 +205,12 @@ const nuevosRegistrosDiarios= async()=>{
     try {
         //Obtenemos Token
        let token = await autenticarOro();
-       
+       console.log(token);
        let fecha = new Date().toISOString().split("T");
+       console.log(fecha);
        let dia = (parseInt(fecha[0].split("-")[2])-1).toString();
     
-       
+    
        let fechaFinal = fecha[0].split('-');
        fechaFinal[2]=dia;
       
@@ -228,7 +230,7 @@ const nuevosRegistrosDiarios= async()=>{
            }).catch(err =>{
                console.log(err);
                respuesta.statusCod = false;
-               respuesta.statusDesc = `Error al obtener oc para el cliente con el id ${id_oc}` ;
+               respuesta.statusDesc = `Error al obtener lista` ;
            })
        }else{
         respuesta.statusCod = false;
@@ -236,7 +238,7 @@ const nuevosRegistrosDiarios= async()=>{
        }
 
     } catch (error) {
-        log.error(error);
+  
         console.log(error);
         respuesta.statusCod = false;
         respuesta.statusDesc = "Error al obtener ejecutar metodo " + error;
@@ -244,11 +246,56 @@ const nuevosRegistrosDiarios= async()=>{
    
     return respuesta;
 }
+/**
+ * Obtener productos solicitados
+ * @param {} id_oc
+ */
+const obtenerProductosOC = async (id_oc) =>{
+    
+    let respuesta = {   
+        statusCod: true,
+        statusDesc: "" 
+    }
+
+    try{
+        let token = await autenticarOro();
+        if(token){
+            await axios.get(
+                `${process.env.ORO_SITE_PATH}/3m0nk_admin/api/orders/${id_oc}/lineItems?page[number]=1&page[size]=10&sort=id`,
+                {headers: { 
+                    'Authorization': `Bearer ${token.access_token}`,
+                     'Content-Type': 'application/vnd.api+json'
+                  }
+                 }
+            ).then(res =>{
+                respuesta.statusCod = true;
+                respuesta.statusDesc = `Lista de OC`,
+                respuesta.lista_de_productos = res.data.data
+            }).catch(err =>{
+                console.log(err);
+                respuesta.statusCod = false;
+                respuesta.statusDesc = `Error al obtener lista` ;
+            })
+        }else{
+            console.log("TOKEN INVALIDO");
+            respuesta.statusCod = false;
+            respuesta.statusDesc = "Token invalido";
+        }
+    }catch(e){
+        console.log("ERROR: ",e);
+        respuesta.statusCod = false;
+        respuesta.statusDesc = "Error al obtener ejecutar metodo " + error;
+    }
+    console.log(respuesta)
+    return respuesta;
+}
+
 module.exports = {
     autenticarOro,
     obtenerOCListaCliente,
     obtenerDetalleOc,
     obtenerTodasLasOc,
     ultimaOc,
-    nuevosRegistrosDiarios
+    nuevosRegistrosDiarios,
+    obtenerProductosOC
 }

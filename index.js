@@ -2,9 +2,9 @@
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
- const { obtenerOCListaCliente, obtenerTodasLasOc,ultimaOc,nuevosRegistrosDiarios } = require('./app/controllers/downloadInfo');
- const {migrateOroCommerce,crearDocumento,setOcOro,asociarNv,actualizarDocumento} = require('./app/controllers/persistirS3');
- const {obtenerDetalleDocumento, obtenerIdDocumento} = require('./app/controllers/getInfoAws');
+ const { obtenerOCListaCliente, obtenerTodasLasOc,ultimaOc,nuevosRegistrosDiarios,obtenerProductosOC } = require('./app/controllers/downloadInfo');
+ const {migrateOroCommerce,crearDocumento,setOcOro,asociarNv,actualizarDocumento, nuevasOc,obtenerUltimoNumeroTabla} = require('./app/controllers/persistirS3');
+ const {obtenerDetalleDocumento, obtenerIdDocumento,obtenerListaDocumentos} = require('./app/controllers/getInfoAws');
  const {obtenerListaNv,autenticacion,obtenerDetalleNv} = require('./app/controllers/infoSoftne');
 
  const cron = require('node-cron');
@@ -12,9 +12,8 @@ require('dotenv').config();
 
 const port = process.env.PORT;
 const app = express();
-
 //asociarNv(68,70,"2021","07");
-
+//  migrateOroCommerce();
 /**
  * Middleware
  */
@@ -35,23 +34,43 @@ app.listen(port,()=>{
 });
 
 
-cron.schedule('0 0 * * * ',async()=>{
+cron.schedule('* * * * *',async()=>{
      console.log("Actualizando Sistema");
-     const nuevasOc = await nuevosRegistrosDiarios();
-     if(nuevasOc.data.length > 1){
-      try {
-         for(let i=0; i < nuevasOc.data.length;i++){
-            
-            const documentoRegistrado = await crearDocumento(nuevasOc.data[i].id);
-              if(documentoRegistrado.statusCod){
-               await setOcOro(parseInt(nuevasOc.data[i].id));
-              }
+     const nuevosRegistros = await nuevasOc();
+    console.log(nuevosRegistros);
+
+     const obtenerId =await obtenerUltimoNumeroTabla();
+
+     if(nuevosRegistros.statusCod){
+
+        for(let i = 0; i < nuevosRegistros.nuevasOc.length; i++){
+
+         const documentoRegistrado = await crearDocumento((nuevosRegistros.nuevasOc[i]).toString(),"SIN NV ASOCIADA","SIN NV SHERPA ASOCIADA");
+         if(documentoRegistrado.statusCod){
+            const obtenerId =await obtenerUltimoNumeroTabla();
+            await setOcOro(obtenerId.idUltimoDocumento - 1,nuevosRegistros.nuevasOc[i]);
          }
-      } catch (error) {
-         console.log(error);
-      }
+        }
+        console.log("Ha concluido la actualizacion");
+     
+     }else{
+        console.log("No hay registros nuevos");
      }
-
-
-
 });
+
+const migrar = async()=>{
+   console.log("Migrando DB");
+   const nuevosRegistros = await nuevasOc();
+   const obtenerId =await obtenerUltimoNumeroTabla();
+   if(nuevosRegistros.statusCod){
+      for(let i = 0; i < nuevosRegistros.nuevasOc.length; i++){
+       const documentoRegistrado = await crearDocumento((nuevosRegistros.nuevasOc[i]).toString(),"SIN NV ASOCIADA","SIN NV SHERPA ASOCIADA");
+       if(documentoRegistrado.statusCod){
+          const obtenerId =await obtenerUltimoNumeroTabla();
+          
+          await setOcOro(obtenerId.idUltimoDocumento - 1,nuevosRegistros.nuevasOc[i]);
+       }
+      }
+   
+   } 
+}
