@@ -47,7 +47,7 @@ const autenticacion = async()=>{
         respuesta.statusCod = false;
         respuesta.statusDesc = `Error:  ${error.message}` ;
     }
-    console.log(respuesta);
+
     return respuesta;
 }
 /**

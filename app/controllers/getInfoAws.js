@@ -39,9 +39,6 @@ const obtenerDetalleDocumento = async(id)=>{
       }
      
       return respuesta;
-
-    
-    
 }
 /**
  * Obtener id Documento
@@ -102,8 +99,6 @@ const obtenerListaDocumentos = async()=>{
         const data= await DynamoDB.scan(params).promise();
 
         if(data){
-         
-          
             respuesta.statusCod=true;
             respuesta.statusDesc="";
             respuesta.documentos = data;
@@ -122,10 +117,87 @@ const obtenerListaDocumentos = async()=>{
       return respuesta;
 }
 
+/**
+ * 
+ * @param {*} folio 
+ * @returns 
+ */
+const obtenetRegistroPago = async(folio)=>{
+    let respuesta = {
+        statusCod: true,
+        statusDesc: ""
+    };
+
+    let DynamoDB = new AWS.DynamoDB.DocumentClient();
+    const tablaDynamo = "tbRegistrosPagos";
+    
+    let params = {
+        TableName:tablaDynamo,
+        Key:{
+            "folio":folio
+        }
+    };
+
+    try{
+        const data= await DynamoDB.get(params).promise();
+        let lengthOfObject = Object.keys(data).length; 
+       if(lengthOfObject == 0){
+        respuesta.statusCod = false;
+        respuesta.statusDesc = `no hay registros de pagos para nv ${folio}`
+
+       }else{
+        respuesta.statusCod = true;
+        respuesta.statusDesc = `registro de pagos para nv ${folio}`
+        respuesta.registro = data.Item.registro;
+       }
+
+    } catch (error) {
+    console.log(error);
+    respuesta.statusCod = false;
+    respuesta.statusDesc =`Ha ocurrido un error al obtener la nota de venta ${folio}`;
+    }
+    // console.log(respuesta);
+    return respuesta;
+}
+
+const obtenerListaNotaVentas = async()=>{
+
+    let DynamoDB = new AWS.DynamoDB.DocumentClient();
+    const tablaDynamo = "tbListaNotasVentas-dev";
+
+    let respuesta = {
+        statusCod:true,
+        statusDesc:""
+    }
+    let params = {
+        TableName:tablaDynamo
+        };
+    try {
+        const data= await DynamoDB.scan(params).promise();
+        let lengthOfObject = Object.keys(data).length; 
+
+        if(lengthOfObject > 0) {
+            respuesta.statusCod = true;
+            respuesta.statusDesc = "Lista de nota de ventas",
+            respuesta.nota_de_ventas = data.Items
+        }else{
+            respuesta.statusCod = false;
+            respuesta.statusDesc = "No se encontraron registros"
+        }
+
+    } catch (error) {
+        console.error(error);
+        respuesta.statusCod="ERR";
+        respuesta.statusDesc=e.message;
+    }
+    return respuesta;
+}
+
+
 module.exports = {
     obtenerDetalleDocumento,
     obtenerIdDocumento,
-    obtenerListaDocumentos
-    
-    
+    obtenerListaDocumentos,
+    obtenetRegistroPago,
+    obtenerListaNotaVentas
 }

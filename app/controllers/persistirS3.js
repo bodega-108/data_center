@@ -362,6 +362,37 @@ const nuevasOc = async()=>{
   return respuesta;
 }
 
+const guardarPago = async (folio,registro) =>{
+ 
+  let DynamoDB = new AWS.DynamoDB.DocumentClient();
+  const tablaDynamo = "tbRegistrosPagos";
+
+  var respuesta={
+      statusCod:true,
+      statusDesc:""
+    }
+
+  let params = {
+      TableName:tablaDynamo,
+      Item:{
+        "folio":folio,
+        registro
+      }
+    };
+  
+    try{     
+      
+      const data= await DynamoDB.put(params).promise();
+      respuesta.statusDesc = data;
+      respuesta.statusCod=true;   
+  }catch(e){/**Error*/
+     console.log(e);
+      respuesta.statusCod="ERR";
+      respuesta.statusDesc=e.message;
+    }
+    return respuesta;
+}
+
 module.exports = {
   migrateOroCommerce,
   crearDocumento,
@@ -369,5 +400,6 @@ module.exports = {
   asociarNv,
   actualizarDocumento,
   nuevasOc,
-  obtenerUltimoNumeroTabla
+  obtenerUltimoNumeroTabla,
+  guardarPago
 }

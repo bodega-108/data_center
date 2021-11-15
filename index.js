@@ -3,17 +3,22 @@ const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
  const { obtenerOCListaCliente, obtenerTodasLasOc,ultimaOc,nuevosRegistrosDiarios,obtenerProductosOC } = require('./app/controllers/downloadInfo');
- const {migrateOroCommerce,crearDocumento,setOcOro,asociarNv,actualizarDocumento, nuevasOc,obtenerUltimoNumeroTabla} = require('./app/controllers/persistirS3');
- const {obtenerDetalleDocumento, obtenerIdDocumento,obtenerListaDocumentos} = require('./app/controllers/getInfoAws');
+ const {migrateOroCommerce,crearDocumento,setOcOro,asociarNv,actualizarDocumento, nuevasOc,obtenerUltimoNumeroTabla,guardarPago} = require('./app/controllers/persistirS3');
+ const {obtenerDetalleDocumento, obtenerIdDocumento,obtenerListaDocumentos,obtenetRegistroPago} = require('./app/controllers/getInfoAws');
  const {obtenerListaNv,autenticacion,obtenerDetalleNv} = require('./app/controllers/infoSoftne');
+ const {registrarPago,calculos} = require('./app/pagos/controllers/procesarPagos');
 
  const cron = require('node-cron');
 require('dotenv').config();
 
 const port = process.env.PORT;
 const app = express();
-//asociarNv(68,70,"2021","07");
-//  migrateOroCommerce();
+
+
+//  registrarPago(50000,1,"9-000044-001");
+ //calculos(150000,1,"9-000044-001");
+
+ //obtenetRegistroPago(1)
 /**
  * Middleware
  */
@@ -34,7 +39,7 @@ app.listen(port,()=>{
 });
 
 
-cron.schedule('* * * * *',async()=>{
+cron.schedule('0 0 * * *',async()=>{
      console.log("Actualizando Sistema");
      const nuevosRegistros = await nuevasOc();
     console.log(nuevosRegistros);
