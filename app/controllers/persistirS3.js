@@ -317,7 +317,6 @@ const nuevasOc = async()=>{
     const listaAWS = await obtenerListaDocumentos();
    
     const listaOC = await obtenerTodasLasOc();
-    //  console.log(listaOC.data.data);
 
     if(listaAWS.documentos.Count != listaOC.data.data.length ){
 
@@ -362,6 +361,8 @@ const nuevasOc = async()=>{
   return respuesta;
 }
 
+
+
 const guardarPago = async (folio,registro) =>{
  
   let DynamoDB = new AWS.DynamoDB.DocumentClient();
@@ -381,7 +382,6 @@ const guardarPago = async (folio,registro) =>{
     };
   
     try{     
-      
       const data= await DynamoDB.put(params).promise();
       respuesta.statusDesc = data;
       respuesta.statusCod=true;   

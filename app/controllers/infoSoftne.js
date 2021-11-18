@@ -119,7 +119,7 @@ const obtenerListaNv = async(year,mes)=>{
             const listaNV=await obtenerListaNv(year,mes);
 
             const notaDeVenta = listaNV.data.filter(nv=>nv.folio === folio);
-            console.log(notaDeVenta);
+            
           
             await axios({
                 method: 'POST',

@@ -1,12 +1,13 @@
 const { response } = require('express');
-const {registrarPago } = require('./procesarPagos');
+const {registrarPago,guardarPagoNV } = require('./procesarPagos');
 const {obtenetRegistroPago,obtenerListaNotaVentas} = require('../../controllers/getInfoAws');
 
 const registrarPagoRest = async(req, res = response)=>{
 
-    const {folio,sku,monto,factura_asociada} = req.body;
+    const {folio,monto,factura_asociada,descripcion,moneda,desc_movi,tipo_documento} = req.body;
 
-    const registrar = await registrarPago(monto,folio,sku,factura_asociada);
+    const registrar = await guardarPagoNV(folio,monto,factura_asociada,descripcion,moneda,desc_movi,tipo_documento);
+
     if(registrar.statusCod){
         res.json({
             ok: true,

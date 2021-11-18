@@ -40,7 +40,6 @@ const registrarPago = async(monto,folio,sku,factura_asociada)=>{
     return respuesta;
 }
 
-
 /**
  * Calcular cantidades y saldo pendiete por item
  * @param {*} monto 
@@ -93,11 +92,6 @@ const calculos = async(monto,folio,sku,factura_asociada)=>{
                     hora: `${today.getHours()}:${today.getMinutes()}:${today.getSeconds()}`
                 }
                 respuesta.calculosResultado.push(newPay);
-            // }else{
-                // respuesta.statusCod= false;
-                // respuesta.statusDesc=`La nota de venta ha sido cancelada en su totalidad`
-            // }
-
 
         }else{
             //Calculos
@@ -129,8 +123,161 @@ const calculos = async(monto,folio,sku,factura_asociada)=>{
     return respuesta;
 }
 
+const registrarPagoNV = async(folio,monto,factura_asociada,descripcion,moneda,desc_movi,tipo_documento)=>{
+    let respuesta = {
+        statusCod : true,
+        statusDesc:"",
+        calculosResultado:[]
+    }
+
+    try {
+        const detalleNV = await obtenerDetalleNv(folio,"2021","06");   
+       
+        if(detalleNV.statusCod){
+            const historial = await obtenetRegistroPago(folio);
+            
+            if(historial.statusCod){
+
+                let pagosAcumulados = [];
+
+                for(let i=0; i < historial.registro.length; i++) {
+                    pagosAcumulados.push(historial.registro[i].monto);
+                    respuesta.calculosResultado.push(historial.registro[i]);
+                }
+
+                let totalPagosAcumulados = pagosAcumulados.reduce((a,b)=>a+b,0);
+                let montoTotalNV = detalleNV.data.totales.MntTotal;
+                let montoPendiente = montoTotalNV - (monto + parseInt(totalPagosAcumulados));
+                let today = new Date();
+
+                let nuevoPago = {
+                    totalMontoNV: montoTotalNV,
+                    monto,
+                    montoPendiente,
+                    factura_asc: factura_asociada ? factura_asociada : "No hay factura asociada",
+                    fecha :new Date().toLocaleDateString(),
+                    hora: `${today.getHours()}:${today.getMinutes()}:${today.getSeconds()}`,
+                    mes: getMontString(today.getMonth()),
+                    descripcion: descripcion ? descripcion : "ABONO ha nota de venta",
+                    moneda: moneda ? moneda  : "CLP",
+                    desc_movi: desc_movi ? desc_movi :"Pago nota de venta folio " + folio,
+                    tipo_documento : tipo_documento ? tipo_documento : "FACTURA"
+                };
+                respuesta.calculosResultado.push(nuevoPago);
+                respuesta.statusDesc = "Abono";
+            }else{
+                let montoTotalNV = detalleNV.data.totales.MntTotal;
+                let montoPendiente = montoTotalNV - monto;
+                let today = new Date();
+
+                let nuevoPago = {
+                    totalMontoNV: montoTotalNV,
+                    monto,
+                    montoPendiente,
+                    factura_asc: factura_asociada ? factura_asociada : "No hay factura asociada",
+                    fecha :new Date().toLocaleDateString(),
+                    hora: `${today.getHours()}:${today.getMinutes()}:${today.getSeconds()}`,
+                    mes: getMontString(today.getMonth()),
+                    descripcion: descripcion ? descripcion : "ABONO ha nota de venta",
+                    moneda: moneda ? moneda  : "CLP",
+                    desc_movi: desc_movi ? desc_movi :"Pago nota de venta folio " + folio,
+                    tipo_documento : tipo_documento ? tipo_documento : "FACTURA"
+                };
+
+                respuesta.calculosResultado.push(nuevoPago);
+                respuesta.statusDesc = "Primer pago";
+            }
+        }else{
+            
+            respuesta.statusCod =false;
+            respuesta.statusDesc = `Error al obtener la nota de venta con el folio ${folio}`;
+        }
+
+    } catch (error) {
+        console.log(error);
+    }
+    console.log(respuesta);
+    return respuesta;
+}
+
+const guardarPagoNV = async(folio,monto,factura_asociada,descripcion,moneda,desc_movi,tipo_documento)=>{
+    let respuesta = {
+        statusCod:true,
+        statusDesc: ""
+    };
+
+    try {
+       const calculosPago = await registrarPagoNV(folio,monto,factura_asociada,descripcion,moneda,desc_movi,tipo_documento);
+        console.log(calculosPago);
+       if(calculosPago.statusCod){
+              const nuevoRegistro = await guardarPago(folio,calculosPago.calculosResultado);
+             respuesta.statusCod = true;
+             respuesta.statusDesc = `Se ha registrado un nuevo pago para la nota de venta ${folio}`
+        }else{
+            respuesta.statusCod = false;
+            respuesta.statusDesc =calculosPago.statusDesc
+        }
+       
+
+    } catch (error) {
+        console.log(error);
+        respuesta.statusCod = false;
+        respuesta.statusDesc ="ha ocurrido un error al guardar el pago"
+    }
+
+    return respuesta;
+}
+
+const getMontString = (month)=>{
+    let mes = "";
+    switch (month) {
+        case 1:
+            mes = "Enero";
+            break;
+        case 2:
+            mes = "Febrero";
+            break;
+        case 3:
+            mes = "Marzo";
+            break;
+        case 4:
+            mes = "Abril";
+            break;
+        case 5:
+            mes = "Mayo";
+            break;
+        case 6:
+            mes = "Junio";
+            break;
+        case 7:
+            mes = "Julio";
+            break;
+        case 8:
+            mes = "Agosto";
+            break;
+        case 9:
+            mes = "Septiembre";
+            break;
+        case 10:
+            mes = "Octubre";
+            break;
+        case 11:
+            mes = "Noviembre";
+            break;
+        case 12:
+            mes = "Diciembre";
+            break;
+        default:
+            mes = "Unknown";
+            break;       
+    }
+    return mes;
+}
+
 module.exports = {
     registrarPago,
-    calculos
+    calculos,
+    registrarPagoNV,
+    guardarPagoNV
 
 }
