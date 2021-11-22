@@ -194,6 +194,7 @@ const obtenerListaNotaVentas = async()=>{
 }
 
 
+
 module.exports = {
     obtenerDetalleDocumento,
     obtenerIdDocumento,

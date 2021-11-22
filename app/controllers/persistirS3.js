@@ -393,6 +393,74 @@ const guardarPago = async (folio,registro) =>{
     return respuesta;
 }
 
+const migrarNV = async()=>{
+  let respuesta = {
+    statusCod:true,
+    statusDesc: ""
+  }
+
+  try {
+    for(let i = 1; i < 98; i ++){
+      const detalleFacturaSoftnet = await obtenerDetalleNv(i,"mes","year");
+      
+      let notadeventa = {
+        folio:i,
+        fecha: detalleFacturaSoftnet.data.idDoc.fechaEmis,
+        cliente: detalleFacturaSoftnet.data.receptor.RznSocRecep,
+        productos:detalleFacturaSoftnet.data.Detalle
+      }
+      console.log(notadeventa);
+
+       await guardarNotaDeVenta(notadeventa);
+
+    }
+     
+    respuesta.statusCod=true;
+    respuesta.statusDesc="La data ha sido migrada en su totalidad";
+  } catch (error) {
+   console.log(error);
+   respuesta.statusCod = false;
+   respuesta.statusDesc = `Ha ocuriddo un error al obtener` 
+  }
+
+  console.log(respuesta);
+  return respuesta;
+
+
+}
+
+const guardarNotaDeVenta = async(notadeventa)=>{
+  console.log("iniciando guardado de nota de venta");
+
+  let DynamoDB = new AWS.DynamoDB.DocumentClient();
+  
+  const tablaDynamo = "tbListaNotasVentas-dev";
+
+  var respuesta={
+      statusCod:true,
+      statusDesc:""
+    }
+
+  let params = {
+      TableName:tablaDynamo,
+      Item:notadeventa
+    };
+  
+    try{     
+      //Obtenemos el ultimo ID de documento
+      const data= await DynamoDB.put(params).promise();
+      respuesta.statusDesc = `migrada nota de venta con el folio ${notadeventa.folio}`;
+      respuesta.statusCod=true;
+
+  }catch(e){/**Error*/
+     console.log(e);
+      respuesta.statusCod="ERR";
+      respuesta.statusDesc=e.message;
+    }
+    console.log(respuesta);
+    return respuesta;
+} 
+
 module.exports = {
   migrateOroCommerce,
   crearDocumento,
@@ -401,5 +469,6 @@ module.exports = {
   actualizarDocumento,
   nuevasOc,
   obtenerUltimoNumeroTabla,
-  guardarPago
+  guardarPago,
+  migrarNV
 }

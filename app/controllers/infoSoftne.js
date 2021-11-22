@@ -114,11 +114,6 @@ const obtenerListaNv = async(year,mes)=>{
         let token = await autenticacion();
 
         if(token){
-
-
-            const listaNV=await obtenerListaNv(year,mes);
-
-            const notaDeVenta = listaNV.data.filter(nv=>nv.folio === folio);
             
           
             await axios({
