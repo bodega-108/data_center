@@ -123,7 +123,8 @@ const calculos = async(monto,folio,sku,factura_asociada)=>{
     return respuesta;
 }
 
-const registrarPagoNV = async(folio,monto,factura_asociada,descripcion,moneda,desc_movi,tipo_documento)=>{
+const registrarPagoNV = async(folio,monto,factura_asociada,descripcion,moneda,desc_movi,tipo_documento, tipo_cambio,CCTVTS,fecha_pago)=>{
+    console.log("EL TIPO DE CAMBIO ES " + tipo_cambio);
     let respuesta = {
         statusCod : true,
         statusDesc:"",
@@ -144,7 +145,11 @@ const registrarPagoNV = async(folio,monto,factura_asociada,descripcion,moneda,de
                     pagosAcumulados.push(historial.registro[i].monto);
                     respuesta.calculosResultado.push(historial.registro[i]);
                 }
-
+                if(moneda === "USD"){
+                    monto = monto * tipo_cambio;
+                }else{
+                    tipo_cambio = "NO APLICA"
+                }
                 let totalPagosAcumulados = pagosAcumulados.reduce((a,b)=>a+b,0);
                 let montoTotalNV = detalleNV.data.totales.MntTotal;
                 let montoPendiente = montoTotalNV - (monto + parseInt(totalPagosAcumulados));
@@ -155,31 +160,43 @@ const registrarPagoNV = async(folio,monto,factura_asociada,descripcion,moneda,de
                     monto,
                     montoPendiente,
                     factura_asc: factura_asociada ? factura_asociada : "No hay factura asociada",
-                    fecha :new Date().toLocaleDateString(),
+                    fecha_pago,
+                    fecha_registro_sistema :new Date().toLocaleDateString(),
                     hora: `${today.getHours()}:${today.getMinutes()}:${today.getSeconds()}`,
                     mes: getMontString(today.getMonth()),
                     descripcion: descripcion ? descripcion : "ABONO ha nota de venta",
                     moneda: moneda ? moneda  : "CLP",
+                    tipo_cambio: tipo_cambio ? tipo_cambio : 1,
                     desc_movi: desc_movi ? desc_movi :"Pago nota de venta folio " + folio,
-                    tipo_documento : tipo_documento ? tipo_documento : "FACTURA"
+                    tipo_documento : tipo_documento ? tipo_documento : "FACTURA",
+                    
                 };
                 respuesta.calculosResultado.push(nuevoPago);
                 respuesta.statusDesc = "Abono";
             }else{
+
+                if(moneda === "USD"){
+                    monto = monto * tipo_cambio;
+                }else{
+                    tipo_cambio = "NO APLICA"
+                }
                 let montoTotalNV = detalleNV.data.totales.MntTotal;
                 let montoPendiente = montoTotalNV - monto;
                 let today = new Date();
-
+    
                 let nuevoPago = {
+                    CCTVTS,
                     totalMontoNV: montoTotalNV,
                     monto,
                     montoPendiente,
                     factura_asc: factura_asociada ? factura_asociada : "No hay factura asociada",
-                    fecha :new Date().toLocaleDateString(),
+                    fecha_pago,
+                    fecha_registro_sistema :new Date().toLocaleDateString(),
                     hora: `${today.getHours()}:${today.getMinutes()}:${today.getSeconds()}`,
                     mes: getMontString(today.getMonth()),
                     descripcion: descripcion ? descripcion : "ABONO ha nota de venta",
                     moneda: moneda ? moneda  : "CLP",
+                    tipo_cambio,
                     desc_movi: desc_movi ? desc_movi :"Pago nota de venta folio " + folio,
                     tipo_documento : tipo_documento ? tipo_documento : "FACTURA"
                 };
@@ -200,14 +217,14 @@ const registrarPagoNV = async(folio,monto,factura_asociada,descripcion,moneda,de
     return respuesta;
 }
 
-const guardarPagoNV = async(folio,monto,factura_asociada,descripcion,moneda,desc_movi,tipo_documento)=>{
+const guardarPagoNV = async(folio,monto,factura_asociada,descripcion,moneda,desc_movi,tipo_documento,tipo_cambio,CCTVTS,fecha_pago)=>{
     let respuesta = {
         statusCod:true,
         statusDesc: ""
     };
 
     try {
-       const calculosPago = await registrarPagoNV(folio,monto,factura_asociada,descripcion,moneda,desc_movi,tipo_documento);
+       const calculosPago = await registrarPagoNV(folio,monto,factura_asociada,descripcion,moneda,desc_movi,tipo_documento,tipo_cambio,CCTVTS,fecha_pago);
         console.log(calculosPago);
        if(calculosPago.statusCod){
               const nuevoRegistro = await guardarPago(folio,calculosPago.calculosResultado);

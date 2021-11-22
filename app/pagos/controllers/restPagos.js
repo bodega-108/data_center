@@ -4,9 +4,9 @@ const {obtenetRegistroPago,obtenerListaNotaVentas} = require('../../controllers/
 
 const registrarPagoRest = async(req, res = response)=>{
 
-    const {folio,monto,factura_asociada,descripcion,moneda,desc_movi,tipo_documento} = req.body;
+    const {folio,monto,factura_asociada,descripcion,moneda,desc_movi,tipo_documento, tipo_cambio,CCTVTS,fecha_pago} = req.body;
 
-    const registrar = await guardarPagoNV(folio,monto,factura_asociada,descripcion,moneda,desc_movi,tipo_documento);
+    const registrar = await guardarPagoNV(folio,monto,factura_asociada,descripcion,moneda,desc_movi,tipo_documento,tipo_cambio,CCTVTS,fecha_pago);
 
     if(registrar.statusCod){
         res.json({
