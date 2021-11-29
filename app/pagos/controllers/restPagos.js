@@ -1,5 +1,5 @@
 const { response } = require('express');
-const {registrarPago,guardarPagoNV } = require('./procesarPagos');
+const {registrarPago,guardarPagoNV,eliminarPago } = require('./procesarPagos');
 const {obtenetRegistroPago,obtenerListaNotaVentas} = require('../../controllers/getInfoAws');
 
 const registrarPagoRest = async(req, res = response)=>{
@@ -57,10 +57,29 @@ const listaNv = async(req, res = response)=>{
     }
 }
 
+const eliminarRegistroPago = async (req, res = response)=>{
+
+    const {id,folio} = req.body;
+
+    const pagoEliminado = await eliminarPago(id,folio);
+
+    if(pagoEliminado.statusCod){
+        res.json({
+            ok: true,
+            statusDesc: "Registro eliminado con exito"
+        });
+    }else{
+        res.status(500).json({
+            ok:true,
+            statusDesc:"No se ha podido eliminar el registro"
+        });
+    }
+}
 
 
 module.exports={
     registrarPagoRest,
     obtenerHistorialPagos,
-    listaNv
+    listaNv,
+    eliminarRegistroPago
 }

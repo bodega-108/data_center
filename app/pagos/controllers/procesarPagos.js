@@ -1,7 +1,7 @@
 const {obtenerDetalleNv} = require('../../controllers/infoSoftne');
 const {guardarPago} = require('../../controllers/persistirS3');
 const {obtenetRegistroPago} = require('../../controllers/getInfoAws');
-
+const { v4: uuidv4 } = require('uuid');
 
 /**
  * Funcion para guardar registros de pagos
@@ -156,6 +156,8 @@ const registrarPagoNV = async(folio,monto,factura_asociada,descripcion,moneda,de
                 let today = new Date();
 
                 let nuevoPago = {
+                    id: uuidv4(),
+                    CCTVTS,
                     totalMontoNV: montoTotalNV,
                     monto,
                     montoPendiente,
@@ -185,6 +187,7 @@ const registrarPagoNV = async(folio,monto,factura_asociada,descripcion,moneda,de
                 let today = new Date();
     
                 let nuevoPago = {
+                    id:uuidv4(),
                     CCTVTS,
                     totalMontoNV: montoTotalNV,
                     monto,
@@ -213,10 +216,24 @@ const registrarPagoNV = async(folio,monto,factura_asociada,descripcion,moneda,de
     } catch (error) {
         console.log(error);
     }
-    console.log(respuesta);
+    //console.log(respuesta);
     return respuesta;
 }
 
+/**
+ * Funcion para guardar pagos
+ * @param {*} folio 
+ * @param {*} monto 
+ * @param {*} factura_asociada 
+ * @param {*} descripcion 
+ * @param {*} moneda 
+ * @param {*} desc_movi 
+ * @param {*} tipo_documento 
+ * @param {*} tipo_cambio 
+ * @param {*} CCTVTS 
+ * @param {*} fecha_pago 
+ * @returns 
+ */
 const guardarPagoNV = async(folio,monto,factura_asociada,descripcion,moneda,desc_movi,tipo_documento,tipo_cambio,CCTVTS,fecha_pago)=>{
     let respuesta = {
         statusCod:true,
@@ -291,10 +308,47 @@ const getMontString = (month)=>{
     return mes;
 }
 
+const eliminarPago = async(id,folio)=>{
+    
+    let respuesta = {
+        statusCod: true,
+        statusDesc:""
+    }
+
+    try {
+       let pago = await obtenetRegistroPago(folio);
+       
+       if(pago.statusCod){
+        console.log(pago);
+        let pagoEliminado = pago.registro.filter(registro => registro.id !== id);
+        const registroEliminado = await guardarPago(folio,pagoEliminado);
+        if(registroEliminado.statusCod){
+            respuesta.statusCod = true;
+            respuesta.statusDesc = "Registro eliminado con exito"
+        }else{
+            respuesta.statusCod = false;
+            respuesta.statusDesc = "No se ha podido eliminar el pago"
+        }
+
+       }else{
+        respuesta.statusCod = false;
+        respuesta.statusDesc = "Ha ocurrido error al elimar el pago"
+       }
+
+    } catch (error) {
+        console.log(error);
+        respuesta.statusCod = false;
+        respuesta.statusDesc = "Ha ocurrido error al elimar el pago"
+    }
+    return respuesta;
+}
+
+
 module.exports = {
     registrarPago,
     calculos,
     registrarPagoNV,
-    guardarPagoNV
+    guardarPagoNV,
+    eliminarPago
 
 }

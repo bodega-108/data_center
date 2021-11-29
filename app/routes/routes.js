@@ -1,7 +1,7 @@
 const {getOCOro,getDetalleOCOro,getDetalleDocumento, asociarNV, obtenerListaDeDocumentos} = require('../controllers/oc');
 const { Router} = require('express');
 const { obtenerListaDocumentos } = require('../controllers/getInfoAws');
-const {registrarPagoRest,obtenerHistorialPagos,listaNv} = require('../pagos/controllers/restPagos');
+const {registrarPagoRest,obtenerHistorialPagos,listaNv,eliminarRegistroPago} = require('../pagos/controllers/restPagos');
 const router = Router();
 
 //Modulo de data-center
@@ -17,4 +17,5 @@ router.get('/documentos',obtenerListaDeDocumentos)
 router.post('/registrar-pago',registrarPagoRest);
 router.get('/historial-pagos/:folio',obtenerHistorialPagos);
 router.get('/lista-nv',listaNv);
+router.post('/eliminar-pago',eliminarRegistroPago);
 module.exports = router;
