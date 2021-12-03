@@ -133,7 +133,7 @@ const registrarPagoNV = async(folio,monto,factura_asociada,descripcion,moneda,de
 
     try {
         const detalleNV = await obtenerDetalleNv(folio,"2021","06");   
-       
+       console.log(detalleNV);
         if(detalleNV.statusCod){
             const historial = await obtenetRegistroPago(folio);
             
@@ -152,11 +152,14 @@ const registrarPagoNV = async(folio,monto,factura_asociada,descripcion,moneda,de
                 }
                 let totalPagosAcumulados = pagosAcumulados.reduce((a,b)=>a+b,0);
                 let montoTotalNV = detalleNV.data.totales.MntTotal;
+                let subFamilia = detalleNV.data.receptor.RznSocRecep;
+                console.log(detalleNV);
                 let montoPendiente = montoTotalNV - (monto + parseInt(totalPagosAcumulados));
                 let today = new Date();
 
                 let nuevoPago = {
                     id: uuidv4(),
+                    subFamilia,
                     CCTVTS,
                     totalMontoNV: montoTotalNV,
                     monto,
@@ -183,6 +186,7 @@ const registrarPagoNV = async(folio,monto,factura_asociada,descripcion,moneda,de
                     tipo_cambio = "NO APLICA"
                 }
                 let montoTotalNV = detalleNV.data.totales.MntTotal;
+                let subFamilia = detalleNV.data.receptor.RznSocRecep;
                 let montoPendiente = montoTotalNV - monto;
                 let today = new Date();
     
@@ -191,6 +195,7 @@ const registrarPagoNV = async(folio,monto,factura_asociada,descripcion,moneda,de
                     CCTVTS,
                     totalMontoNV: montoTotalNV,
                     monto,
+                    subFamilia,
                     montoPendiente,
                     factura_asc: factura_asociada ? factura_asociada : "No hay factura asociada",
                     fecha_pago,
