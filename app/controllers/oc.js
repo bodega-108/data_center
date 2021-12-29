@@ -1,7 +1,8 @@
 const { response } = require('express');
 const {obtenerOCListaCliente,obtenerDetalleOc} = require('./downloadInfo');
-const {obtenerDetalleDocumento, obtenerListaDocumentos} = require('./getInfoAws');
+const {obtenerDetalleDocumento, obtenerListaDocumentos,generarExcel} = require('./getInfoAws');
 const { asociarNv, crearDocumento,actualizarDocumento } = require('./persistirS3');
+const path = require('path');
 
 const getOCOro = async (req, res = response) => {
    let id = req.params.id;
@@ -93,10 +94,51 @@ const obtenerListaDeDocumentos = async (req, res= response) => {
         });
     }
 }
+const exportExcelOrdenes = async (req, res= response) => {
+
+    let fecha = new Date();
+
+    const filePath =path.join(__dirname,`../../outputFiles/ordenes-${fecha.getTime()}.xlsx`);
+    console.log(filePath);
+    const nombre = (filePath.slice(-28)).split('.');
+    const archivo = await generarExcel(filePath);
+    if(archivo.statusCod){
+        res.json({
+            ok: true,
+            message:"arhivo creado",
+            nombre:`${nombre[0]}`
+        });
+    }else{
+        res.status(500).json({
+            ok: false,
+            message:"Ha ocurrido un error",
+        });
+    }
+
+}
+
+const downloadExcel = async(req, res = response)=>{
+    const nombre = req.body.nombre;
+
+    try {
+        const url = path.join(__dirname,`../../outputFiles/${nombre}.xlsx`);
+        console.log(url);
+        res.sendFile(url);
+     }catch(err){
+         console.log(err);
+         res.status(500).json({
+             ok:false,
+             error:err
+         });
+     }
+
+}
 module.exports = {
     getOCOro,
     getDetalleOCOro,
     getDetalleDocumento,
     asociarNV,
-    obtenerListaDeDocumentos
+    obtenerListaDeDocumentos,
+    exportExcelOrdenes,
+    downloadExcel
 };

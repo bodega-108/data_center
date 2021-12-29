@@ -1,4 +1,5 @@
 const AWS = require("aws-sdk");
+const {exportUsersToExcel} = require("./exportExcel");
 
 /**
  * Obtener Detalle de documento
@@ -194,11 +195,105 @@ const obtenerListaNotaVentas = async()=>{
 }
 
 
+const obtenerMontoPendiente = async(folio)=>{
+    
+    let DynamoDB = new AWS.DynamoDB.DocumentClient();
+    const tablaDynamo = "tbPagoNv-dev";
+    
+    let respuesta = {
+        statusCod: true,
+        statusDesc: "",
+        
+    };
+
+    let params = {
+        TableName:tablaDynamo,
+        Key:{
+            "folio":folio.toString()
+        }
+    }
+
+    try {
+        const data= await DynamoDB.get(params).promise();
+        console.log(data);
+        let lengthOfObject = Object.keys(data).length; 
+        console.log(lengthOfObject);
+
+        if(lengthOfObject == 0) {
+            respuesta.statusCod = false;
+            respuesta.statusDesc = `No se encontro un registro con el folio ${folio}`
+        }else{
+            respuesta.statusCod = true;
+            respuesta.statusDesc = `Registro encontrado`;
+            respuesta.montoDeuda = data.Item;
+        }
+    } catch (error) {
+        console.log(error);
+        respuesta.statusCod = false;
+        respuesta.statusDesc = "Ha ocurrido un error al obtener el pago"
+    }
+
+    return respuesta;
+}
+
+/**
+ * Obtener id Documento
+ */
+ const obtenerTodasLasOcBuilding = async()=>{
+   
+   let DynamoDB = new AWS.DynamoDB.DocumentClient();
+   const tablaDynamo = "tbOcBuild";
+
+   var respuesta={
+       statusCod:true,
+       statusDesc:""
+     }
+
+     let params = {
+       TableName:tablaDynamo
+   };
+
+   try{
+       const data= await DynamoDB.scan(params).promise();
+       respuesta.listaOrdenes = data.Items;
+   }catch(e){/**Error*/
+      
+       respuesta.statusCod="ERR";
+       respuesta.statusDesc=`Error al intentar obtener documento ${e.message}`;
+     }
+    
+     return respuesta;
+   
+}
+
+
+
+const generarExcel = async (filePath)=>{
+    let respuesta = {
+        statusCod: true,
+        statusDesc: ""
+    };
+
+    try {
+        const listaOC = await obtenerTodasLasOcBuilding();
+        //console.log(listaOC);
+        if(listaOC.statusCod){
+            exportUsersToExcel(listaOC.listaOrdenes,filePath);
+        }
+    } catch (error) {
+        console.log(error);
+    }
+
+    return respuesta;
+}
 
 module.exports = {
     obtenerDetalleDocumento,
     obtenerIdDocumento,
     obtenerListaDocumentos,
     obtenetRegistroPago,
-    obtenerListaNotaVentas
+    obtenerListaNotaVentas,
+    obtenerMontoPendiente,
+    obtenerTodasLasOcBuilding,
+    generarExcel
 }

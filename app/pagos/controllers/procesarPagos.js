@@ -1,6 +1,6 @@
 const {obtenerDetalleNv} = require('../../controllers/infoSoftne');
-const {guardarPago} = require('../../controllers/persistirS3');
-const {obtenetRegistroPago} = require('../../controllers/getInfoAws');
+const {guardarPago,guardarMontoDeuda} = require('../../controllers/persistirS3');
+const {obtenetRegistroPago,obtenerMontoPendiente} = require('../../controllers/getInfoAws');
 const { v4: uuidv4 } = require('uuid');
 
 /**
@@ -267,6 +267,66 @@ const guardarPagoNV = async(folio,monto,factura_asociada,descripcion,moneda,desc
     return respuesta;
 }
 
+const calcularPagoVDos = async (folio,monto,tipo)=>{
+   
+    let respuesta = {
+        statusCod:true,
+        statusDesc:""
+    }
+
+    try{
+        const detalleNV = await obtenerDetalleNv(folio,"2021","06");   
+        
+        let montoTotal = detalleNV.data.totales.MntTotal;
+        let montoPendiente = await obtenerMontoPendiente(folio);
+        
+        if(montoPendiente.statusCod){
+            if(tipo === "abono"){
+          
+                let nuevoMontoPendiente = montoPendiente.montoDeuda.montoPendiente - monto;
+               
+                let newMontoPendiente = {
+                    folio,  
+                    nuevoMontoPendiente
+                };
+
+                respuesta.statusCod = true;
+                respuesta.statusDesc = `Resultado de deducción`;
+                respuesta.montoDeuda = newMontoPendiente;
+            }else{
+
+                let nuevoMontoPendiente = montoPendiente.montoDeuda.montoPendiente + monto;
+                let newMontoPendiente = {
+                    folio,  
+                    nuevoMontoPendiente
+                };
+
+                respuesta.statusCod = true;
+                respuesta.statusDesc = `Resultado de devolucion de pago`;
+                respuesta.montoDeuda = newMontoPendiente;
+            }
+        }else{
+          let nuevoMontoPendiente = montoTotal - monto;
+          let newMontoPendiente = {
+            folio,  
+            nuevoMontoPendiente
+        };
+            
+          respuesta.statusCod = true;
+          respuesta.statusDesc = `Resultado de primer calculo`;
+          respuesta.montoDeuda = newMontoPendiente;
+        }
+
+    }catch(err){
+        console.log(err);
+        respuesta.statusCod = false;
+        respuesta.statusDesc = `Ha ocurrido un error al calcular.`
+    }
+    console.log(respuesta);
+    return respuesta;
+
+}
+
 const getMontString = (month)=>{
     let mes = "";
     switch (month) {
@@ -348,12 +408,50 @@ const eliminarPago = async(id,folio)=>{
     return respuesta;
 }
 
+const persistirPago = async(folio,monto,tipo)=>{
+
+    let respuesta = {
+        statusCod:true,
+        statusDesc: ""
+    }
+
+    try{
+        const calcularPagoVDosResult = await calcularPagoVDos(folio,monto,tipo);
+      
+        if(calcularPagoVDosResult.statusCod){
+            const resultPersistencia = await guardarMontoDeuda(calcularPagoVDosResult.montoDeuda);
+            
+            if(resultPersistencia.statusCod){
+                respuesta.statusCod = true;
+                respuesta.statusDesc = `Se ha registrado el pago con exito.`
+            }else{
+                respuesta.statusCod = false;
+                respuesta.statusDesc = `No se puede registrar este pago.`
+            }
+        }else{
+            respuesta.statusCod = false;
+            respuesta.statusDesc = `Ha ocurrido un error al calcular.`
+        }
+       
+
+    }catch(e){
+        console.log(e);
+        respuesta.statusCod = true;
+        respuesta.statusDesc = `Ha ocurrido un error al calcular.`
+    }
+
+    console.log(respuesta);
+
+    return respuesta;
+}
 
 module.exports = {
     registrarPago,
     calculos,
     registrarPagoNV,
     guardarPagoNV,
-    eliminarPago
+    eliminarPago,
+    calcularPagoVDos,
+    persistirPago
 
 }

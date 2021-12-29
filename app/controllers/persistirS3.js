@@ -1,6 +1,6 @@
 const AWS = require("aws-sdk");
 const { v4: uuidv4 } = require('uuid');
-const {ultimaOc,obtenerDetalleOc,obtenerTodasLasOc,obtenerProductosOC} = require('./downloadinfo');
+const {ultimaOc,obtenerDetalleOc,obtenerTodasLasOc,obtenerProductosOC,buildDetailOc} = require('./downloadinfo');
 const { obtenerDetalleDocumento,obtenerIdDocumento,obtenerListaDocumentos } = require("./getInfoAws");
 const {obtenerDetalleNv} = require('./infoSoftne');
 
@@ -362,7 +362,12 @@ const nuevasOc = async()=>{
 }
 
 
-
+/**
+ * 
+ * @param {*} folio 
+ * @param {*} registro 
+ * @returns 
+ */
 const guardarPago = async (folio,registro) =>{
  
   let DynamoDB = new AWS.DynamoDB.DocumentClient();
@@ -393,6 +398,64 @@ const guardarPago = async (folio,registro) =>{
     return respuesta;
 }
 
+/**
+ * 
+ * @param {*} folio 
+ * @param {*} registro 
+ * @returns 
+ */
+ const guardarOcBuild = async (oc) =>{
+ 
+  let DynamoDB = new AWS.DynamoDB.DocumentClient();
+  const tablaDynamo = "tbOcBuild";
+
+  var respuesta={
+      statusCod:true,
+      statusDesc:""
+    }
+
+  let params = {
+      TableName:tablaDynamo,
+      Item:{
+        id_oc:oc.id,
+        cliente:oc.cliente,
+        fulldata:oc
+      }
+    };
+  
+    try{     
+      const data= await DynamoDB.put(params).promise();
+      respuesta.statusDesc = data;
+      respuesta.statusCod=true;
+      console.log("====== OC MIGRADA CON EXITO =======");
+  }catch(e){/**Error*/
+     console.log(e);
+      respuesta.statusCod="ERR";
+      respuesta.statusDesc=e.message;
+    }
+    return respuesta;
+}
+
+const migrarOcBuild = async ()=>{
+  console.log("====== INICIANDO MIGRACION =======");
+  let respuesta = {
+    statusCode:true,
+    statusDesc:""
+  };
+
+  try{
+   const listaMigracionOc = await buildDetailOc();
+    //const migracion = await guardarOcBuild();
+    for(let i = 0; i < listaMigracionOc.listOc.length; i++){
+      console.log(`====== MIGRANDO OC ${listaMigracionOc.listOc.id} =======`);
+    }
+  }catch(error){
+    console.log(error);
+  }
+
+  console.log(respuesta);
+  return respuesta;
+}
 const migrarNV = async()=>{
   let respuesta = {
     statusCod:true,
@@ -429,6 +492,11 @@ const migrarNV = async()=>{
 
 }
 
+/**
+ * 
+ * @param {*} notadeventa 
+ * @returns 
+ */
 const guardarNotaDeVenta = async(notadeventa)=>{
   console.log("iniciando guardado de nota de venta");
 
@@ -459,7 +527,43 @@ const guardarNotaDeVenta = async(notadeventa)=>{
     }
     console.log(respuesta);
     return respuesta;
-} 
+}
+
+const guardarMontoDeuda = async(nuevoMonto)=>{
+  let DynamoDB = new AWS.DynamoDB.DocumentClient();
+  const tablaDynamo = "tbPagoNv-dev";
+  
+  console.log(nuevoMonto);
+
+  let respuesta = {
+    statusCod : true,
+    statusDesc : ""
+  }
+  let params = {
+    TableName:tablaDynamo,
+    Item:{
+      "folio":nuevoMonto.folio.toString(),
+      "montoPendiente":nuevoMonto.nuevoMontoPendiente
+    }
+  };
+
+  try{
+    
+    const data= await DynamoDB.put(params).promise();
+    console.log(data);
+    respuesta.statusDesc = `Se ha registrado pago para la nota de venta con el folio ${nuevoMonto.folio}`;
+    respuesta.statusCod=true;
+  
+  }catch(e){
+    
+    console.log(e);
+    respuesta.statusCod=false;
+    respuesta.statusDesc=e.message;
+  
+  }
+
+  return respuesta;
+}
 
 module.exports = {
   migrateOroCommerce,
@@ -470,5 +574,9 @@ module.exports = {
   nuevasOc,
   obtenerUltimoNumeroTabla,
   guardarPago,
-  migrarNV
+  migrarNV,
+  guardarMontoDeuda,
+  guardarOcBuild,
+  migrarOcBuild,
+  guardarOcBuild
 }

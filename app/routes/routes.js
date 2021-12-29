@@ -1,4 +1,4 @@
-const {getOCOro,getDetalleOCOro,getDetalleDocumento, asociarNV, obtenerListaDeDocumentos} = require('../controllers/oc');
+const {getOCOro,getDetalleOCOro,getDetalleDocumento, asociarNV, obtenerListaDeDocumentos,exportExcelOrdenes,downloadExcel} = require('../controllers/oc');
 const { Router} = require('express');
 const { obtenerListaDocumentos } = require('../controllers/getInfoAws');
 const {registrarPagoRest,obtenerHistorialPagos,listaNv,eliminarRegistroPago} = require('../pagos/controllers/restPagos');
@@ -18,4 +18,6 @@ router.post('/registrar-pago',registrarPagoRest);
 router.get('/historial-pagos/:folio',obtenerHistorialPagos);
 router.get('/lista-nv',listaNv);
 router.post('/eliminar-pago',eliminarRegistroPago);
+router.get('/exportar-excel-ordenes',exportExcelOrdenes);
+router.post('/download-excel',downloadExcel);
 module.exports = router;

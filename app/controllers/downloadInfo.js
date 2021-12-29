@@ -1,5 +1,5 @@
 const axios = require('axios').default;
-
+const {guardarOcBuild} = require('./persistirS3');
 /**
  * Funcion para generarToken de oro
  * 
@@ -155,10 +155,55 @@ const obtenerDetalleOc = async(id_oc) => {
         respuesta.statusCod = false;
         respuesta.statusDesc = "Error al obtener ejecutar metodo " + error;
     }
-    console.log(respuesta.data.data.length);
+    //console.log(respuesta);
+    //  console.log(respuesta.data.data.length);
     return respuesta;
 }
+/**
+ * Obtener todas las oc
+ * 
+ */
+ const obtenerDatosClientOc = async(id_oc) => {
 
+    let respuesta = {   
+        statusCod: true,
+        statusDesc: "" 
+    }
+    try {
+        //Obtenemos Token
+       let token = await autenticarOro();
+       if(token){
+           await axios.get(
+               `${process.env.ORO_SITE_PATH}/3m0nk_admin/api/orders/${id_oc}/customer`,
+               {headers: { 
+                   'Authorization': `Bearer ${token.access_token}`,
+                    'Content-Type': 'application/vnd.api+json'
+                 }
+                }
+           ).then(res =>{
+               respuesta.statusCod = true;
+               respuesta.statusDesc = `Datos del cliente de OC`,
+               respuesta.data = res.data
+           }).catch(err =>{
+               console.log(err);
+               respuesta.statusCod = false;
+               respuesta.statusDesc = `Error al obtener los datos del cliente en la oc ${id_oc}` ;
+           })
+       }else{
+        respuesta.statusCod = false;
+        respuesta.statusDesc = "Error al obtener el token";
+       }
+
+    } catch (error) {
+        log.error(error);
+        console.log(error);
+        respuesta.statusCod = false;
+        respuesta.statusDesc = "Error al obtener ejecutar metodo " + error;
+    }
+    //console.log(respuesta);
+    //  console.log(respuesta.data.data.length);
+    return respuesta;
+}
 /**
  * Obtener nuevo registro oc desde oro
  */
@@ -286,10 +331,67 @@ const obtenerProductosOC = async (id_oc) =>{
         respuesta.statusCod = false;
         respuesta.statusDesc = "Error al obtener ejecutar metodo " + error;
     }
-    console.log(respuesta)
+    //console.log(respuesta)
     return respuesta;
 }
 
+const buildDetailOc = async ()=>{
+
+    let respuesta = {
+        statusCod: true,
+        statusDesc: "",
+        listOc:[]
+    };
+
+    try {
+
+        console.log("====== CONSTRUYENDO LISTA DE OC =======");
+        // Obtener lista de oc
+        const listaOc = await obtenerTodasLasOc();
+        //console.log(listaOc);
+        
+        if(listaOc.statusCod){
+            for(let i = 0; i < listaOc.data.data.length; i++){
+                // console.log(listaOc.data.data[i].id);
+                //asignamos id
+                let ocApp = {
+                    id:listaOc.data.data[i].id,
+                }
+               
+                const datosCliente = await obtenerDatosClientOc(listaOc.data.data[i].id);
+                //asignamos nombre de clientr
+               if(datosCliente.statusCod){
+                //console.log(datosCliente.data.data.attributes.name);
+                ocApp.cliente = datosCliente.data.data.attributes.name;
+               }
+               const productosInOc = await obtenerProductosOC(listaOc.data.data[i].id);
+               if(productosInOc.statusCod){
+                   ocApp.productos = productosInOc.lista_de_productos;
+               }
+               
+               ocApp.poNumber = listaOc.data.data[i].attributes.poNumber;
+               ocApp.moneda = listaOc.data.data[i].attributes.currency;
+               ocApp.subtotal = listaOc.data.data[i].attributes.subtotalValue;
+               ocApp.total = listaOc.data.data[i].attributes.totalValue;
+               ocApp.creada = listaOc.data.data[i].attributes.createdAt;
+               console.log(`====== OC ${listaOc.data.data[i].id} CONSTRUIDA =======`);
+              const guardado = await guardarOcBuild(ocApp);
+
+              if(guardado.statusCod){
+                //console.log(`====== OC ${id} GUARDADA =======`);
+              }
+               respuesta.listOc.push(ocApp);
+             
+            }
+        }   
+        
+    } catch (error) {
+        console.log(error);
+    }
+    console.log("====== LISTA CONSTRUIDA =======");
+    
+    return respuesta;
+}
 module.exports = {
     autenticarOro,
     obtenerOCListaCliente,
@@ -297,7 +399,8 @@ module.exports = {
     obtenerTodasLasOc,
     ultimaOc,
     nuevosRegistrosDiarios,
-    obtenerProductosOC
+    obtenerProductosOC,
+    buildDetailOc
 }
 
 
