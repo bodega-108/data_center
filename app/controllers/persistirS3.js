@@ -445,7 +445,7 @@ const migrarOcBuild = async ()=>{
 
   try{
    const listaMigracionOc = await buildDetailOc();
-    //const migracion = await guardarOcBuild();
+
     for(let i = 0; i < listaMigracionOc.listOc.length; i++){
       console.log(`====== MIGRANDO OC ${listaMigracionOc.listOc.id} =======`);
     }
@@ -577,6 +577,5 @@ module.exports = {
   migrarNV,
   guardarMontoDeuda,
   guardarOcBuild,
-  migrarOcBuild,
-  guardarOcBuild
+  migrarOcBuild
 }
