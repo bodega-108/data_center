@@ -1,6 +1,6 @@
 const AWS = require("aws-sdk");
 const { v4: uuidv4 } = require('uuid');
-const {ultimaOc,obtenerDetalleOc,obtenerTodasLasOc,obtenerProductosOC,buildDetailOc} = require('./downloadinfo');
+const {ultimaOc,obtenerDetalleOc,obtenerTodasLasOc,obtenerProductosOC,buildDetailOc} = require('./downloadInfo');
 const { obtenerDetalleDocumento,obtenerIdDocumento,obtenerListaDocumentos } = require("./getInfoAws");
 const {obtenerDetalleNv} = require('./infoSoftne');
 
