@@ -400,14 +400,13 @@ const guardarPago = async (folio,registro) =>{
 
 /**
  * 
- * @param {*} folio 
- * @param {*} registro 
+ * @param {*} oc
  * @returns 
  */
- const guardarOcBuild = async (oc) =>{
+ const guardarOcConstruida = async (oc) =>{
  
   let DynamoDB = new AWS.DynamoDB.DocumentClient();
-  const tablaDynamo = "tbOcBuild";
+  const tablaDynamo = "tbOcBuild-prod";
 
   var respuesta={
       statusCod:true,
@@ -576,6 +575,6 @@ module.exports = {
   guardarPago,
   migrarNV,
   guardarMontoDeuda,
-  guardarOcBuild,
+  guardarOcConstruida,
   migrarOcBuild
 }

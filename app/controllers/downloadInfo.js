@@ -1,5 +1,6 @@
 const axios = require('axios').default;
-const {guardarOcBuild} = require('./persistirS3');
+
+
 /**
  * Funcion para generarToken de oro
  * 
@@ -348,12 +349,10 @@ const buildDetailOc = async ()=>{
         console.log("====== CONSTRUYENDO LISTA DE OC =======");
         // Obtener lista de oc
         const listaOc = await obtenerTodasLasOc();
-        //console.log(listaOc);
         
         if(listaOc.statusCod){
             for(let i = 0; i < listaOc.data.data.length; i++){
-                // console.log(listaOc.data.data[i].id);
-                //asignamos id
+
                 let ocApp = {
                     id:listaOc.data.data[i].id,
                 }
@@ -375,16 +374,12 @@ const buildDetailOc = async ()=>{
                ocApp.total = listaOc.data.data[i].attributes.totalValue;
                ocApp.creada = listaOc.data.data[i].attributes.createdAt;
                console.log(`====== OC ${listaOc.data.data[i].id} CONSTRUIDA =======`);
-              const guardado = await guardarOcBuild(ocApp);
-
-              if(guardado.statusCod){
-                //console.log(`====== OC ${id} GUARDADA =======`);
-              }
+               
+    
                respuesta.listOc.push(ocApp);
-             
+              
             }
         }   
-        
     } catch (error) {
         console.log(error);
     }

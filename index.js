@@ -3,7 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
 
- const {crearDocumento,setOcOro,nuevasOc,obtenerUltimoNumeroTabla} = require('./app/controllers/persistirS3');
+const {crearDocumento,setOcOro,nuevasOc,obtenerUltimoNumeroTabla} = require('./app/controllers/persistirS3');
 
 
  const cron = require('node-cron');
@@ -11,12 +11,6 @@ require('dotenv').config();
 
 const port = process.env.PORT;
 const app = express();
-
-// persistirPago(1,1000,"abono");
-//buildDetailOc();
-// obtenerTodasLasOcBuilding();
-//generarExcel();
-//guardarPagoNV(1,10000,21,"Abono de goma eva","CLP","Abono","FACTURA");
 
 /**
  * Middleware
