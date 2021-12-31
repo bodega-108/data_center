@@ -243,6 +243,7 @@ const obtenerMontoPendiente = async(folio)=>{
    
    let DynamoDB = new AWS.DynamoDB.DocumentClient();
    const tablaDynamo = `tbOcBuild-${process.env.ENVIRONMENT}`;
+   console.log(tablaDynamo);
 
    var respuesta={
        statusCod:true,
