@@ -135,9 +135,9 @@ const downloadExcel = async(req, res = response)=>{
 }
 
 const listadoOcOro = async (req, res) =>{
-
+console.log('probando')
     const listaDeOrdenes = await obtenerTodasLasOcBuilding();
-   
+    console.log(listaDeOrdenes);
     if(listaDeOrdenes.statusCod){
         res.json({
             ok:true,
