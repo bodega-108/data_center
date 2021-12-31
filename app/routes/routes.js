@@ -1,4 +1,4 @@
-const {getOCOro,getDetalleOCOro,getDetalleDocumento, asociarNV, obtenerListaDeDocumentos,exportExcelOrdenes,downloadExcel} = require('../controllers/oc');
+const {getOCOro,getDetalleOCOro,getDetalleDocumento, asociarNV, obtenerListaDeDocumentos,exportExcelOrdenes,downloadExcel,listadoOcOro} = require('../controllers/oc');
 const { Router} = require('express');
 const { obtenerListaDocumentos } = require('../controllers/getInfoAws');
 const {registrarPagoRest,obtenerHistorialPagos,listaNv,eliminarRegistroPago} = require('../pagos/controllers/restPagos');
@@ -10,7 +10,7 @@ router.get('/detalle-oc/:id',getDetalleOCOro);
 router.get('/detalle-documento/:id',getDetalleDocumento);
 router.post('/asociarNv',asociarNV);
 router.get('/documentos',obtenerListaDeDocumentos)
-
+router.get('/lista-oc-oro',listadoOcOro);
 
 //Modulo de pagos
 

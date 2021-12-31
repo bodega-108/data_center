@@ -1,6 +1,6 @@
 const { response } = require('express');
 const {obtenerOCListaCliente,obtenerDetalleOc} = require('./downloadInfo');
-const {obtenerDetalleDocumento, obtenerListaDocumentos,generarExcel} = require('./getInfoAws');
+const {obtenerDetalleDocumento, obtenerListaDocumentos,generarExcel,obtenerTodasLasOcBuilding} = require('./getInfoAws');
 const { asociarNv, crearDocumento,actualizarDocumento } = require('./persistirS3');
 const path = require('path');
 
@@ -99,7 +99,7 @@ const exportExcelOrdenes = async (req, res= response) => {
     let fecha = new Date();
 
     const filePath =path.join(__dirname,`../../outputFiles/ordenes-${fecha.getTime()}.xlsx`);
-    console.log(filePath);
+   
     const nombre = (filePath.slice(-28)).split('.');
     const archivo = await generarExcel(filePath);
     if(archivo.statusCod){
@@ -133,6 +133,23 @@ const downloadExcel = async(req, res = response)=>{
      }
 
 }
+
+const listadoOcOro = async (req, res) =>{
+
+    const listaDeOrdenes = await obtenerTodasLasOcBuilding();
+   
+    if(listaDeOrdenes.statusCod){
+        res.json({
+            ok:true,
+            listaDeOrdenes: listaDeOrdenes.listaOrdenes
+        })
+    }else{
+        res.status(500).json({
+            ok:true,
+            message:"Ha ocurrido un error obeteniendo la lista"
+        });
+    }
+}
 module.exports = {
     getOCOro,
     getDetalleOCOro,
@@ -140,5 +157,6 @@ module.exports = {
     asociarNV,
     obtenerListaDeDocumentos,
     exportExcelOrdenes,
-    downloadExcel
+    downloadExcel,
+    listadoOcOro
 };
