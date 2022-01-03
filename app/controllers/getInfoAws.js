@@ -268,6 +268,44 @@ const tablaDynamo = "tbOcBuild-prod";
    
 }
 
+/**
+ * Obtener id Documento
+ */
+ const obtenerTodasLasOcBuildingCliente = async(cliente)=>{
+   
+    let DynamoDB = new AWS.DynamoDB.DocumentClient();
+ //    const tablaDynamo = `tbOcBuild-${process.env.ENVIRONMENT}`;
+ //    console.log(process.env.ENVIRONMENT);
+ const tablaDynamo = "tbOcBuild-dev";
+    var respuesta={
+        statusCod:true,
+        statusDesc:""
+      }
+ 
+      let params = {
+        TableName:tablaDynamo,
+        Key:{
+            "id_oc":"137"
+        }
+    };
+
+    console.log(params);
+ 
+    try{
+        const data= await DynamoDB.get(params).promise();
+        console.log(data)
+        respuesta.listaOrdenes = data.Items;
+    }catch(e){/**Error*/
+        console.log(e)
+        respuesta.statusCod="ERR";
+        respuesta.statusDesc=`Error al intentar obtener documento ${e.message}`;
+      }
+     
+      //console.log(respuesta);
+      return respuesta;
+    
+ }
+ 
 
 
 const generarExcel = async (filePath)=>{
@@ -297,5 +335,6 @@ module.exports = {
     obtenerListaNotaVentas,
     obtenerMontoPendiente,
     obtenerTodasLasOcBuilding,
-    generarExcel
+    generarExcel,
+    obtenerTodasLasOcBuildingCliente
 }

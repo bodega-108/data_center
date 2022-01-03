@@ -2,16 +2,33 @@
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
+const {obtenerTodasLasOcBuildingCliente} = require('./app/controllers/getInfoAws');
+const {crearDocumento,setOcOro,nuevasOc,obtenerUltimoNumeroTabla,guardarOcConstruida} = require('./app/controllers/persistirS3');
+const {buildDetailOc} = require('./app/controllers/downloadInfo');
 
-const {crearDocumento,setOcOro,nuevasOc,obtenerUltimoNumeroTabla} = require('./app/controllers/persistirS3');
-
-
- const cron = require('node-cron');
+const cron = require('node-cron');
 require('dotenv').config();
 
 const port = process.env.PORT;
 const app = express();
 
+
+ //obtenerTodasLasOcBuildingCliente("Insumos medicos MyM SPA");
+
+// const migracion = async() =>{
+//    const migrate = await buildDetailOc();
+//    console.log(migrate);
+//    for(let i = 0; i < migrate.listOc.length; i++){
+//          const guardado = await guardarOcConstruida(migrate.listOc[i]);
+//          if(guardado.statusCod){
+//             console.log(`Guardado con exito oc ${migrate.listOc[i].id}`);
+
+//          }
+//    }
+
+
+// }
+// migracion();
 /**
  * Middleware
  */

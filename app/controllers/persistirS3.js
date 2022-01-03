@@ -406,7 +406,7 @@ const guardarPago = async (folio,registro) =>{
  const guardarOcConstruida = async (oc) =>{
  
   let DynamoDB = new AWS.DynamoDB.DocumentClient();
-  const tablaDynamo = "tbOcBuild-prod";
+  const tablaDynamo = "tbOcBuild-dev";
 
   var respuesta={
       statusCod:true,
