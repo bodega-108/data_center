@@ -19,5 +19,5 @@ router.get('/historial-pagos/:folio',obtenerHistorialPagos);
 router.get('/lista-nv',listaNv);
 router.post('/eliminar-pago',eliminarRegistroPago);
 router.get('/exportar-excel-ordenes',exportExcelOrdenes);
-router.post('/download-excel',downloadExcel);
+router.get('/download-excel/:nombre',downloadExcel);
 module.exports = router;

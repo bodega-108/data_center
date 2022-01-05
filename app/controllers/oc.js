@@ -118,7 +118,7 @@ const exportExcelOrdenes = async (req, res= response) => {
 }
 
 const downloadExcel = async(req, res = response)=>{
-    const nombre = req.body.nombre;
+    const nombre = req.params.nombre;
 
     try {
         const url = path.join(__dirname,`../../outputFiles/${nombre}.xlsx`);
