@@ -351,7 +351,7 @@ const buildDetailOc = async ()=>{
         const listaOc = await obtenerTodasLasOc();
         
         if(listaOc.statusCod){
-            for(let i = 0; i < /*listaOc.data.data.length*/50; i++){
+            for(let i = 0; i < listaOc.data.data.length; i++){
 
                 let ocApp = {
                     id:listaOc.data.data[i].id,

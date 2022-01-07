@@ -327,6 +327,39 @@ const generarExcel = async (filePath)=>{
     return respuesta;
 }
 
+/**
+ * Obtener id Documento
+ */
+ const obtenerFechaActualizacion = async()=>{
+   
+    let DynamoDB = new AWS.DynamoDB.DocumentClient();
+ const tablaDynamo = "tbActualizaciones-dev";
+    var respuesta={
+        statusCod:true,
+        statusDesc:""
+      }
+ 
+      let params = {
+        TableName:tablaDynamo,
+        Key:{
+            "id_actualizacion":"1"
+        }
+    };
+
+    try{
+        const data= await DynamoDB.get(params).promise();
+        respuesta.fecha = data.Item;
+    }catch(e){/**Error*/
+        console.log(e)
+        respuesta.statusCod="ERR";
+        respuesta.statusDesc=`Error al intentar obtener documento ${e.message}`;
+      }
+     
+      //console.log(respuesta);
+      return respuesta;
+    
+ }
+
 module.exports = {
     obtenerDetalleDocumento,
     obtenerIdDocumento,
@@ -336,5 +369,6 @@ module.exports = {
     obtenerMontoPendiente,
     obtenerTodasLasOcBuilding,
     generarExcel,
-    obtenerTodasLasOcBuildingCliente
+    obtenerTodasLasOcBuildingCliente,
+    obtenerFechaActualizacion
 }

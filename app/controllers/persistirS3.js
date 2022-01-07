@@ -564,6 +564,52 @@ const guardarMontoDeuda = async(nuevoMonto)=>{
   return respuesta;
 }
 
+const guardarActualizacionListaOc = async (id) =>{
+ 
+  let DynamoDB = new AWS.DynamoDB.DocumentClient();
+  const tablaDynamo = "tbActualizaciones-dev";
+
+  var respuesta={
+      statusCod:true,
+      statusDesc:""
+    }
+
+    let fecha = new Date();
+   
+    let dia = fecha.getDate();
+    let mes = fecha.getMonth().toLocaleString();
+    let year = fecha.getFullYear();
+
+    let hora = fecha.getHours();
+    let minutos = fecha.getMinutes();
+
+
+    let fechaActualizacion = `${dia}-${mes}-${year}`;
+    let horaTotal = `${hora}:${minutos}`;
+    
+    
+  let params = {
+      TableName:tablaDynamo,
+      Item:{
+        id_actualizacion:id.toString(),
+        fecha:fechaActualizacion,
+        hora:horaTotal
+      }
+    };
+  
+    try{     
+      const data= await DynamoDB.put(params).promise();
+      respuesta.statusDesc = data;
+      respuesta.statusCod=true;
+      console.log("====== ACTUALIZADO CON EXITO =======");
+  }catch(e){/**Error*/
+     console.log(e);
+      respuesta.statusCod="ERR";
+      respuesta.statusDesc=e.message;
+    }
+    return respuesta;
+}
+
 module.exports = {
   migrateOroCommerce,
   crearDocumento,
@@ -576,5 +622,6 @@ module.exports = {
   migrarNV,
   guardarMontoDeuda,
   guardarOcConstruida,
-  migrarOcBuild
+  migrarOcBuild,
+  guardarActualizacionListaOc
 }

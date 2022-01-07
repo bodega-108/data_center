@@ -1,6 +1,6 @@
 const { response } = require('express');
 const {obtenerOCListaCliente,obtenerDetalleOc} = require('./downloadInfo');
-const {obtenerDetalleDocumento, obtenerListaDocumentos,generarExcel,obtenerTodasLasOcBuilding} = require('./getInfoAws');
+const {obtenerDetalleDocumento, obtenerListaDocumentos,generarExcel,obtenerTodasLasOcBuilding,obtenerFechaActualizacion} = require('./getInfoAws');
 const { asociarNv, crearDocumento,actualizarDocumento } = require('./persistirS3');
 const path = require('path');
 
@@ -150,6 +150,26 @@ console.log('probando')
         });
     }
 }
+
+const fechaActualizacionMigracionOc = async(req, res) => {
+    try {
+
+        const fechaA = await obtenerFechaActualizacion();
+        console.log(fechaA);
+        if(fechaA.statusCod){
+            res.json({
+                ok:true,
+                fecha_actualizacion : fechaA.fecha
+            });
+        }
+     }catch(err){
+         console.log(err);
+         res.status(500).json({
+             ok:false,
+             error:err
+         });
+     }
+}
 module.exports = {
     getOCOro,
     getDetalleOCOro,
@@ -158,5 +178,6 @@ module.exports = {
     obtenerListaDeDocumentos,
     exportExcelOrdenes,
     downloadExcel,
-    listadoOcOro
+    listadoOcOro,
+    fechaActualizacionMigracionOc
 };

@@ -3,7 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
 const {obtenerTodasLasOcBuildingCliente} = require('./app/controllers/getInfoAws');
-const {crearDocumento,setOcOro,nuevasOc,obtenerUltimoNumeroTabla,guardarOcConstruida} = require('./app/controllers/persistirS3');
+const {crearDocumento,setOcOro,nuevasOc,obtenerUltimoNumeroTabla,guardarOcConstruida,guardarActualizacionListaOc} = require('./app/controllers/persistirS3');
 const {buildDetailOc} = require('./app/controllers/downloadInfo');
 
 const cron = require('node-cron');
@@ -15,20 +15,25 @@ const app = express();
 
  //obtenerTodasLasOcBuildingCliente("Insumos medicos MyM SPA");
 
-// const migracion = async() =>{
-//    const migrate = await buildDetailOc();
-//    console.log(migrate);
-//    for(let i = 0; i < migrate.listOc.length; i++){
-//          const guardado = await guardarOcConstruida(migrate.listOc[i]);
-//          if(guardado.statusCod){
-//             console.log(`Guardado con exito oc ${migrate.listOc[i].id}`);
+ 
+const migracion = () =>{
+   
+   cron.schedule('*/30 * * * *',async()=>{
+      const migrate = await buildDetailOc();
+      console.log("Actualizando lista de ordenes");
+      console.log(migrate);
 
-//          }
-//    }
-
-
-// }
-// migracion();
+      for(let i = 0; i < migrate.listOc.length; i++){
+         const guardado = await guardarOcConstruida(migrate.listOc[i]);
+         if(guardado.statusCod){
+            console.log(`Guardado con exito oc ${migrate.listOc[i].id}`);
+         }
+      }
+      console.log("========== FIN DE ACTUALIZACIÓN ==========")
+      guardarActualizacionListaOc(1);
+   })
+}
+ migracion();
 /**
  * Middleware
  */
