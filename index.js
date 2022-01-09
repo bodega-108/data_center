@@ -30,9 +30,10 @@ const migracion = () =>{
          }
       }
       console.log("========== FIN DE ACTUALIZACIÓN ==========")
-      guardarActualizacionListaOc(1);
+      await guardarActualizacionListaOc(1);
    })
 }
+
  migracion();
 /**
  * Middleware

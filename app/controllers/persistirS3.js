@@ -584,7 +584,7 @@ const guardarActualizacionListaOc = async (id) =>{
     let minutos = fecha.getMinutes();
 
 
-    let fechaActualizacion = `${dia}-${mes}-${year}`;
+    let fechaActualizacion =fecha.toISOString().split('T')[0];
     let horaTotal = `${hora}:${minutos}`;
     
     
