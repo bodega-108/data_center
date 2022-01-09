@@ -12,12 +12,9 @@ require('dotenv').config();
 const port = process.env.PORT;
 const app = express();
 
+//obtenerTodasLasOcBuildingCliente("Insumos medicos MyM SPA");
 
- //obtenerTodasLasOcBuildingCliente("Insumos medicos MyM SPA");
-
- 
-const migracion = () =>{
-   
+const migracion = async () =>{
    cron.schedule('*/30 * * * *',async()=>{
       const migrate = await buildDetailOc();
       console.log("Actualizando lista de ordenes");
@@ -33,6 +30,7 @@ const migracion = () =>{
       await guardarActualizacionListaOc(1);
    })
 }
+guardarActualizacionListaOc(1);
 
  migracion();
 /**
