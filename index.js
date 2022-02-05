@@ -5,6 +5,11 @@ const morgan = require('morgan');
 const {obtenerTodasLasOcBuildingCliente} = require('./app/controllers/getInfoAws');
 const {crearDocumento,setOcOro,nuevasOc,obtenerUltimoNumeroTabla,guardarOcConstruida,guardarActualizacionListaOc} = require('./app/controllers/persistirS3');
 const {buildDetailOc} = require('./app/controllers/downloadInfo');
+const path = require('path');
+
+//sawgger
+const swaggerUI = require("swagger-ui-express");
+const swaggerJsDoc = require("swagger-jsdoc");
 
 const cron = require('node-cron');
 require('dotenv').config();
@@ -33,13 +38,33 @@ const migracion = async () =>{
 guardarActualizacionListaOc(1);
 
  migracion();
+
+ const swaggerSpec ={
+   definition:{
+      openapi:"3.0.0",
+      info:{
+         title:"EMONK PANEL ADMINISTRATIVO API",
+         version:"1.0.0"
+      },
+      servers:[
+         {
+         url:`http://localhost:${process.env.PORT}`,
+         },
+         {
+            url:`http://54.203.82.32:${process.env.PORT}`,
+         }
+   ]
+   },
+   apis:[`${path.join(__dirname,"./app/routes/routes.js")}`]
+}
+
 /**
  * Middleware
  */
 app.use(cors());
 app.use(morgan('dev'));
 app.use(express.json());
-
+app.use("/api-doc",swaggerUI.serve, swaggerUI.setup(swaggerJsDoc(swaggerSpec)));
 /**
  * Routes
  */
