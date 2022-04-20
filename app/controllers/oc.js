@@ -1,8 +1,10 @@
 const { response } = require('express');
 const {obtenerOCListaCliente,obtenerDetalleOc} = require('./downloadInfo');
 const {obtenerDetalleDocumento, obtenerListaDocumentos,generarExcel,obtenerTodasLasOcBuilding,obtenerFechaActualizacion} = require('./getInfoAws');
-const { asociarNv, crearDocumento,actualizarDocumento } = require('./persistirS3');
+const { asociarNv, crearDocumento,actualizarDocumento,migrar } = require('./persistirS3');
 const path = require('path');
+const { getInfochina } = require('./getInfoChina');
+
 
 const getOCOro = async (req, res = response) => {
    let id = req.params.id;
@@ -59,9 +61,9 @@ const getDetalleDocumento = async(req,res =response) => {
 }
 
 const asociarNV = async(req, res= response) => {
-    const {id_oc_oro,id_documento,folio,mes,year} = req.body;
+    const {id_oc_oro,id_documento,folio,mes,year,nv_sherpa} = req.body;
     
-    const resultado = await asociarNv(id_documento,folio,year,mes);
+    const resultado = await asociarNv(id_documento,folio,year,mes,nv_sherpa);
 
 
     if(resultado.statusCod){
@@ -170,6 +172,33 @@ const fechaActualizacionMigracionOc = async(req, res) => {
          });
      }
 }
+
+const getInfoChinaResponse = async(req, res)=>{
+    const { id } = req.body;
+
+    const data = await getInfochina(id);
+
+    if(data.statusCod){
+       return res.json({
+            ok:true,
+            message:"AQUI VA LA DATA"
+        });
+    }
+
+    res.status(500).json({
+        ok:false,
+        message:`ERROR al obtener nota de venta ${id}`
+    });
+}
+const migracionManual= async()=>{
+    
+    await migrar();
+    res.json({
+        ok: true,
+        message:"migración finalizada"
+    });
+}
+
 module.exports = {
     getOCOro,
     getDetalleOCOro,
@@ -179,5 +208,7 @@ module.exports = {
     exportExcelOrdenes,
     downloadExcel,
     listadoOcOro,
-    fechaActualizacionMigracionOc
+    fechaActualizacionMigracionOc,
+    getInfoChinaResponse,
+    migracionManual
 };

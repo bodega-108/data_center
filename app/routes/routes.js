@@ -4,10 +4,12 @@ const {getOCOro,getDetalleOCOro,
     exportExcelOrdenes,
     downloadExcel,
     listadoOcOro,
-    fechaActualizacionMigracionOc
+    fechaActualizacionMigracionOc,
+    getInfoChinaResponse
 } = require('../controllers/oc');
 const { Router} = require('express');
 const { obtenerListaDocumentos } = require('../controllers/getInfoAws');
+const { migracionManual } = require('../controllers/oc');
 const {registrarPagoRest,obtenerHistorialPagos,listaNv,eliminarRegistroPago} = require('../pagos/controllers/restPagos');
 const router = Router();
 
@@ -134,4 +136,7 @@ router.post('/eliminar-pago',eliminarRegistroPago);
 router.get('/exportar-excel-ordenes',exportExcelOrdenes);
 router.get('/download-excel/:nombre',downloadExcel);
 router.get('/fecha-ac-oc',fechaActualizacionMigracionOc);
+router.post('/asociar-nv-china',getInfoChinaResponse);
+router.get('/migrar',migracionManual);
+
 module.exports = router;

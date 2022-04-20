@@ -2,7 +2,7 @@
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
-const {obtenerTodasLasOcBuildingCliente} = require('./app/controllers/getInfoAws');
+
 const {crearDocumento,setOcOro,nuevasOc,obtenerUltimoNumeroTabla,guardarOcConstruida,guardarActualizacionListaOc} = require('./app/controllers/persistirS3');
 const {buildDetailOc} = require('./app/controllers/downloadInfo');
 const path = require('path');
@@ -105,7 +105,7 @@ cron.schedule('0 0 * * *',async()=>{
 const migrar = async()=>{
    console.log("Migrando DB");
    const nuevosRegistros = await nuevasOc();
-   const obtenerId =await obtenerUltimoNumeroTabla();
+   
    if(nuevosRegistros.statusCod){
       for(let i = 0; i < nuevosRegistros.nuevasOc.length; i++){
        const documentoRegistrado = await crearDocumento((nuevosRegistros.nuevasOc[i]).toString(),"SIN NV ASOCIADA","SIN NV SHERPA ASOCIADA");
@@ -113,8 +113,12 @@ const migrar = async()=>{
           const obtenerId =await obtenerUltimoNumeroTabla();
           
           await setOcOro(obtenerId.idUltimoDocumento - 1,nuevosRegistros.nuevasOc[i]);
+
+         
        }
       }
    
    } 
+   return;
 }
+//migrar();

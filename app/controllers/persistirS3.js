@@ -3,6 +3,7 @@ const { v4: uuidv4 } = require('uuid');
 const {ultimaOc,obtenerDetalleOc,obtenerTodasLasOc,obtenerProductosOC,buildDetailOc} = require('./downloadInfo');
 const { obtenerDetalleDocumento,obtenerIdDocumento,obtenerListaDocumentos } = require("./getInfoAws");
 const {obtenerDetalleNv} = require('./infoSoftne');
+const { getInfochina } = require('./getInfoChina')
 
 
 AWS_ACCESS_KEY_ID="AKIARR52ZBJVOD6O5KHE";
@@ -219,7 +220,7 @@ const setOcOro = async(id_documento,id)=>{
  * @param {} year;
  * @param {} id_documento;
  */
-const asociarNv = async(id_documento,folio,mes,year) => {
+const asociarNv = async(id_documento,folio,mes,year,nv_sherpa) => {
   let DynamoDB = new AWS.DynamoDB.DocumentClient();
   const tablaDynamo = "tbDetalleDocumento-dev";
 
@@ -232,6 +233,7 @@ const asociarNv = async(id_documento,folio,mes,year) => {
       const detalleOcOro = await obtenerDetalleDocumento(id_documento);
      
       const detalleFacturaSoftnet = await obtenerDetalleNv(folio,mes,year);
+      const notaVentaSherpa = await getInfochina(nv_sherpa);
     
       if(detalleFacturaSoftnet.statusCod) {
         let params = {
@@ -240,7 +242,7 @@ const asociarNv = async(id_documento,folio,mes,year) => {
             "id_documento":id_documento,
             "oc_oro":detalleOcOro.documentos.oc_oro,
             "nv_softnet":detalleFacturaSoftnet.data,
-            "nv_sherpa":"SIN NV SHERPA ASOCIADA"
+            "nv_sherpa":notaVentaSherpa.statusCod ? notaVentaSherpa.data : "SIN NV SHERPA ASOCIADA"
           }
         }
  
@@ -610,6 +612,8 @@ const guardarActualizacionListaOc = async (id) =>{
     return respuesta;
 }
 
+
+
 module.exports = {
   migrateOroCommerce,
   crearDocumento,
@@ -624,4 +628,5 @@ module.exports = {
   guardarOcConstruida,
   migrarOcBuild,
   guardarActualizacionListaOc
+  
 }

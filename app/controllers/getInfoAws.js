@@ -1,6 +1,7 @@
 const AWS = require("aws-sdk");
 const {exportUsersToExcel} = require("./exportExcel");
 
+
 /**
  * Obtener Detalle de documento
  * @param {} id
@@ -360,6 +361,8 @@ const generarExcel = async (filePath)=>{
     
  }
 
+
+
 module.exports = {
     obtenerDetalleDocumento,
     obtenerIdDocumento,
@@ -370,5 +373,6 @@ module.exports = {
     obtenerTodasLasOcBuilding,
     generarExcel,
     obtenerTodasLasOcBuildingCliente,
-    obtenerFechaActualizacion
+    obtenerFechaActualizacion,
+    
 }

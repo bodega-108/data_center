@@ -147,7 +147,7 @@ const obtenerListaNv = async(year,mes)=>{
         respuesta.statusDesc = `Error:  ${error.message}` ;
     }
    
-    return respuesta;
+    return respuesta;r
 }
 
 module.exports = {
