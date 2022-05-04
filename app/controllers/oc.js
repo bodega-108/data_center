@@ -1,9 +1,10 @@
 const { response } = require('express');
-const {obtenerOCListaCliente,obtenerDetalleOc} = require('./downloadInfo');
+const {obtenerOCListaCliente,obtenerDetalleOc, obtenerTodosLosProductos} = require('./downloadInfo');
 const {obtenerDetalleDocumento, obtenerListaDocumentos,generarExcel,obtenerTodasLasOcBuilding,obtenerFechaActualizacion} = require('./getInfoAws');
 const { asociarNv, crearDocumento,actualizarDocumento,migrar } = require('./persistirS3');
 const path = require('path');
 const { getInfochina } = require('./getInfoChina');
+const { saveProductOro, saveProductOroDos } = require('./persistirOro');
 
 
 const getOCOro = async (req, res = response) => {
@@ -199,6 +200,38 @@ const migracionManual= async()=>{
     });
 }
 
+const getProductosOro = async(req, res)=>{
+    const {id} = req.params;
+    const productos = await obtenerTodosLosProductos(id);
+    if(productos.statusCod){
+        return res.json({
+             ok:true,
+             message: productos
+         });
+     }
+ 
+     res.status(500).json({
+         ok:false,
+         message:`ERROR al obtener lista de productos`
+     });
+}
+
+const crearProductoOro = async (req, res) => {
+    const data = req.body;
+   
+    const producto = await saveProductOro(data);
+    if(producto.statusCod){
+        return res.json({
+             ok:true,
+             producto
+         });
+     }
+ 
+     res.status(500).json({
+         ok:false,
+         message:`ERROR al obtener lista de productos`
+     });
+}
 module.exports = {
     getOCOro,
     getDetalleOCOro,
@@ -210,5 +243,7 @@ module.exports = {
     listadoOcOro,
     fechaActualizacionMigracionOc,
     getInfoChinaResponse,
-    migracionManual
+    migracionManual,
+    getProductosOro,
+    crearProductoOro
 };

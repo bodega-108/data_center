@@ -5,7 +5,9 @@ const {getOCOro,getDetalleOCOro,
     downloadExcel,
     listadoOcOro,
     fechaActualizacionMigracionOc,
-    getInfoChinaResponse
+    getInfoChinaResponse,
+    getProductosOro,
+    crearProductoOro
 } = require('../controllers/oc');
 const { Router} = require('express');
 const { obtenerListaDocumentos } = require('../controllers/getInfoAws');
@@ -138,5 +140,7 @@ router.get('/download-excel/:nombre',downloadExcel);
 router.get('/fecha-ac-oc',fechaActualizacionMigracionOc);
 router.post('/asociar-nv-china',getInfoChinaResponse);
 router.get('/migrar',migracionManual);
+router.get('/productos-oro/:id',getProductosOro);
+router.post('/crear-prodcuto-oro',crearProductoOro);
 
 module.exports = router;

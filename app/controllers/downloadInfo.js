@@ -387,6 +387,46 @@ const buildDetailOc = async ()=>{
     
     return respuesta;
 }
+
+const obtenerTodosLosProductos = async(id)=>{
+    
+    let respuesta = {   
+        statusCod: true,
+        statusDesc: "" 
+    }
+
+    try{
+        let token = await autenticarOro();
+        if(token){
+            await axios.get(
+                `${process.env.ORO_SITE_PATH}/3m0nk_admin/api/products/${id}`,
+                {headers: { 
+                    'Authorization': `Bearer ${token.access_token}`,
+                     'Content-Type': 'application/vnd.api+json'
+                  }
+                 }
+            ).then(res =>{
+                respuesta.statusCod = true;
+                respuesta.statusDesc = `Producto`,
+                respuesta.lista_de_productos = res.data;
+            }).catch(err =>{
+                console.log(err);
+                respuesta.statusCod = false;
+                respuesta.statusDesc = `Error al obtener el producto` ;
+            })
+        }else{
+            console.log("TOKEN INVALIDO");
+            respuesta.statusCod = false;
+            respuesta.statusDesc = "Token invalido";
+        }
+    }catch(e){
+        console.log("ERROR: ",e);
+        respuesta.statusCod = false;
+        respuesta.statusDesc = "Error al obtener ejecutar metodo " + error;
+    }
+    //console.log(respuesta)
+    return respuesta; 
+}
 module.exports = {
     autenticarOro,
     obtenerOCListaCliente,
@@ -395,7 +435,8 @@ module.exports = {
     ultimaOc,
     nuevosRegistrosDiarios,
     obtenerProductosOC,
-    buildDetailOc
+    buildDetailOc,
+    obtenerTodosLosProductos
 }
 
 
