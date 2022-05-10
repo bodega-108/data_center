@@ -4,7 +4,7 @@ const {obtenerDetalleDocumento, obtenerListaDocumentos,generarExcel,obtenerTodas
 const { asociarNv, crearDocumento,actualizarDocumento,migrar } = require('./persistirS3');
 const path = require('path');
 const { getInfochina } = require('./getInfoChina');
-const { saveProductOro, saveProductOroDos } = require('./persistirOro');
+const { saveProductOro,updateEta } = require('./persistirOro');
 
 
 const getOCOro = async (req, res = response) => {
@@ -63,10 +63,7 @@ const getDetalleDocumento = async(req,res =response) => {
 
 const asociarNV = async(req, res= response) => {
     const {id_oc_oro,id_documento,folio,mes,year,nv_sherpa} = req.body;
-    
     const resultado = await asociarNv(id_documento,folio,year,mes,nv_sherpa);
-
-
     if(resultado.statusCod){
 
          await actualizarDocumento(id_documento,id_oc_oro,folio,"SIN REGISTRO");
@@ -232,6 +229,16 @@ const crearProductoOro = async (req, res) => {
          message:`ERROR al obtener lista de productos`
      });
 }
+
+const updateEtaOro = async(req, res) =>{
+    const {id,fecha_eta} = req.body;
+    const updateEtaRq = await updateEta(id,fecha_eta);
+
+    res.json({
+        ok:true,
+        message: updateEtaRq
+    });
+}
 module.exports = {
     getOCOro,
     getDetalleOCOro,
@@ -245,5 +252,6 @@ module.exports = {
     getInfoChinaResponse,
     migracionManual,
     getProductosOro,
-    crearProductoOro
+    crearProductoOro,
+    updateEtaOro
 };

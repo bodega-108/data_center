@@ -388,6 +388,9 @@ const buildDetailOc = async ()=>{
     return respuesta;
 }
 
+/**
+ *  Obtener todos los productos
+ */
 const obtenerTodosLosProductos = async(id)=>{
     
     let respuesta = {   
@@ -427,6 +430,8 @@ const obtenerTodosLosProductos = async(id)=>{
     //console.log(respuesta)
     return respuesta; 
 }
+
+
 module.exports = {
     autenticarOro,
     obtenerOCListaCliente,

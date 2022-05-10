@@ -1,4 +1,4 @@
-const { autenticarOro } = require('./downloadInfo');
+const { autenticarOro, obtenerDetalleOc } = require('./downloadInfo');
 
 const axios = require('axios').default;
 
@@ -355,10 +355,106 @@ const saveProductOro = async(datos)=>{
     }
     return respuesta;
 }
+/**
+ * 
+ * @param {*} datos 
+ * @returns 
+ */
+const reqUpdateEta = async(id_oc,datos)=>{
+    
+  let respuesta = {   
+      statusCod: true,
+      statusDesc: "" 
+  }
+  const token = await autenticarOro();
 
+  if(token.access_token){
+      //PREPARAMOS EL OBJETO
+      
+      let updateProduct = {
+        datos
+      };
+      console.log(updateProduct);
+        console.log( `${process.env.ORO_SITE_PATH_ADMIN}/3m0nk_admin/api/orders/${id_oc}`)
+          //Guardamos
+        await axios({
+            method: 'PATCH',
+            headers: { 'Authorization': `Bearer ${token.access_token}`,
+          'Content-Type': 'application/vnd.api+json'},
+            url: `${process.env.ORO_SITE_PATH_ADMIN}/3m0nk_admin/api/orders/${id_oc}`,
+            data: datos 
+        }).then(resp =>{
+            console.log(resp.data);
+            respuesta.statusCod = true;
+            respuesta.message = "Producto creado con exito";
+            respuesta.producto = resp.data;
+        }).catch(err => {
+            console.log(err);
+            respuesta.statusCod =false;
+            respuesta.statusDesc = "Ha ocurrido un error";
+            
+          });
 
+  }else{
+      throw new Error('ERROR AL OBTENER EL TOKEN');
+  }
+  return respuesta;
+}
+const updateEta = async(id_oc,fecha)=>{
+  let respuesta = {   
+    statusCod: true,
+    statusDesc: "" 
+}
+  console.log("LLAMANDO UPDATE ETA");
+
+  let cuerpoUpdateEta = {
+    "data": {
+      "type": "orders",
+      "id": `${id_oc}`,
+      "attributes": {
+        "eta_date": "",
+        "eta_updated": ""
+      }
+  
+    }
+  }
+
+  try {
+    
+    // PROCESAR ORDEN
+    //respuesta.orden = orden.data;
+    cuerpoUpdateEta.data.attributes.eta_date = fecha;
+    //generar fecha
+    var today = new Date();
+    var dd = String(today.getDate()).padStart(2, '0');
+    var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+    var hora = String(today.getHours()).padStart(2, '0');
+    var minutos = String(today.getMinutes()).padStart(2, '0');
+    var segundos = String(today.getSeconds()).padStart(2, '0');
+    var yyyy = today.getFullYear();
+
+    cuerpoUpdateEta.data.attributes.eta_updated = `${yyyy}-${mm}-${dd}T${hora}:${minutos}:${segundos}Z`;
+   
+    
+    const updatePersistOro = await reqUpdateEta(id_oc,cuerpoUpdateEta);
+
+    if(updatePersistOro.statusCod) {
+      respuesta.statusCod = true;
+      respuesta.statusDesc = `El ETA de la orden ${id_oc} ha sido actualizado con exito`;
+    }else{
+      respuesta.statusCod = false;
+      respuesta.statusDesc = `Ha ocurrido un error al actualizar ETA`;
+    }
+  } catch (error) {
+    console.error(error);
+    respuesta.statusCod = false;
+    respuesta.statusDesc = "HA OCURRIDO UN ERROR ACTUALIZANDO EL ETA"
+  }
+  return respuesta;
+}
 
 module.exports = {
-    saveProductOro
+    saveProductOro,
+    updateEta
     
 }

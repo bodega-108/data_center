@@ -228,20 +228,24 @@ const asociarNv = async(id_documento,folio,mes,year,nv_sherpa) => {
     statusCod:true,
     statusDesc:""
   }
-
+  let detalleFacturaSoftnet;
   try {
       const detalleOcOro = await obtenerDetalleDocumento(id_documento);
+     if(folio === 0){
+      detalleFacturaSoftnet = "SIN NV ASOCIADA";
+     }else{
+       detalleFacturaSoftnet = await obtenerDetalleNv(folio,mes,year);
+     }
      
-      const detalleFacturaSoftnet = await obtenerDetalleNv(folio,mes,year);
       const notaVentaSherpa = await getInfochina(nv_sherpa);
     
-      if(detalleFacturaSoftnet.statusCod) {
+      if(detalleFacturaSoftnet.statusCod || detalleFacturaSoftnet === "SIN NV ASOCIADA") {
         let params = {
           TableName:tablaDynamo,
           Item:{
             "id_documento":id_documento,
             "oc_oro":detalleOcOro.documentos.oc_oro,
-            "nv_softnet":detalleFacturaSoftnet.data,
+            "nv_softnet":detalleFacturaSoftnet.data ? detalleFacturaSoftnet.data : "SIN NV ASOCIADA",
             "nv_sherpa":notaVentaSherpa.statusCod ? notaVentaSherpa.data : "SIN NV SHERPA ASOCIADA"
           }
         }
