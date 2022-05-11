@@ -285,8 +285,8 @@ const asociarNv = async(id_documento,folio,mes,year,nv_sherpa) => {
       Item:{
           "id_documento":id_documento,
           "oc_oro": idOcOro.toString(),
-          "nv_sherpa":"",
-          "nv_softnet":idNVSoftnet.toString()
+          "nv_sherpa": idNVSherpa.length === 0 ? "SIN NV SHERPA ASOCIADA" : idNVSherpa.toString(),
+          "nv_softnet":idNVSoftnet === 0 ? "SIN NV ASOCIADA" :idNVSoftnet.toString()
       }
     };
     console.log(params);

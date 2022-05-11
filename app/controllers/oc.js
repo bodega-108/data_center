@@ -66,7 +66,7 @@ const asociarNV = async(req, res= response) => {
     const resultado = await asociarNv(id_documento,folio,year,mes,nv_sherpa);
     if(resultado.statusCod){
 
-         await actualizarDocumento(id_documento,id_oc_oro,folio,"SIN REGISTRO");
+         await actualizarDocumento(id_documento,id_oc_oro,folio,nv_sherpa);
     
         res.json({
             ok: true,
