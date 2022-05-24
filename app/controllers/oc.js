@@ -231,8 +231,8 @@ const crearProductoOro = async (req, res) => {
 }
 
 const updateEtaOro = async(req, res) =>{
-    const {id,fecha_eta} = req.body;
-    const updateEtaRq = await updateEta(id,fecha_eta);
+    const {nv_sherpa,fecha_eta} = req.body;
+    const updateEtaRq = await updateEta(nv_sherpa,fecha_eta);
 
     res.json({
         ok:true,

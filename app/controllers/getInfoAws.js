@@ -361,6 +361,49 @@ const generarExcel = async (filePath)=>{
     
  }
 
+ /**
+ * 
+ * @param {*} folio 
+ * @returns 
+ */
+const obtenerDocumentoBynvSherpa = async(nv_sherpa)=>{
+    let respuesta = {
+        statusCod: true,
+        statusDesc: ""
+    };
+
+    let DynamoDB = new AWS.DynamoDB.DocumentClient();
+    const tablaDynamo = "tbDocumentosOSS-dev";
+    
+    let params = {
+        TableName:tablaDynamo,
+        KeyConditionExpression: 'nv_sherpa = :nvs',
+        ExpressionAttributeValues: {
+        ':nvs': nv_sherpa.toString()
+        }
+    };
+
+    try{
+        const data= await DynamoDB.query(params).promise();
+        console.log(data);
+        if(data.Items.length !== 0){
+             respuesta.statusCod = true;
+             respuesta.statusDesc = `Resultados para la nota de venta ${nv_sherpa}`;
+             respuesta.datos = data.Items;   
+        }else{
+            respuesta.statusCod = false;
+            respuesta.statusDesc = `La nota de venta sherpa ${nv_sherpa} no posee documentos asociados`
+        }
+
+    } catch (error) {
+    console.log(error);
+    respuesta.statusCod = false;
+    respuesta.statusDesc =`Ha ocurrido un error al obtener la nota de venta ${nv_sherpa}`;
+    }
+    // console.log(respuesta);
+    return respuesta;
+}
+
 
 
 module.exports = {
@@ -374,5 +417,6 @@ module.exports = {
     generarExcel,
     obtenerTodasLasOcBuildingCliente,
     obtenerFechaActualizacion,
+    obtenerDocumentoBynvSherpa
     
 }
