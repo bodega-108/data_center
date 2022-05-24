@@ -289,7 +289,7 @@ const asociarNv = async(id_documento,folio,mes,year,nv_sherpa) => {
           "nv_softnet":idNVSoftnet === 0 ? "SIN NV ASOCIADA" :idNVSoftnet.toString()
       }
     };
-    console.log(params);
+   
     try{     
       //Obtenemos el ultimo ID de documento
       const documento = await obtenerIdDocumento(idOcOro);

@@ -23,10 +23,9 @@ const getInfochina = async(id_nv_sherpa)=>{
               }
         }
         ).then(res =>{
-           
             respuesta.statusCod = true;
-            respuesta.statusDesc = data=== `Nota de venta de china`,
-            respuesta.data = res.data === "Nota de Venta no registrada<br>" ? "SIN NV SHERPA ASOCIADA":res.data;
+            respuesta.statusDesc =  `Nota de venta de china`,
+            respuesta.data = res.data === "Nota de Venta no registrada<br>" ? "SIN NV SHERPA ASOCIADA": res.data;
         }).catch(err =>{
             console.log(err);
             respuesta.statusCod = false;
