@@ -3,7 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
 
-const {crearDocumento,setOcOro,nuevasOc,obtenerUltimoNumeroTabla,guardarOcConstruida,guardarActualizacionListaOc} = require('./app/controllers/persistirS3');
+const {crearDocumento,setOcOro,nuevasOc,obtenerUltimoNumeroTabla,guardarOcConstruida,guardarActualizacionListaOc,updateDataOroSherpa} = require('./app/controllers/persistirS3');
 const {buildDetailOc} = require('./app/controllers/downloadInfo');
 const path = require('path');
 
@@ -101,7 +101,11 @@ cron.schedule('0 0 * * *',async()=>{
         console.log("No hay registros nuevos");
      }
 });
-
+// CRON JOB TO UPDATE ETA INFO
+cron.schedule('*/15  * * * *', async()=>{
+   await updateDataOroSherpa();
+   return;
+});
 const migrar = async()=>{
    console.log("Migrando DB");
    const nuevosRegistros = await nuevasOc();
@@ -112,12 +116,9 @@ const migrar = async()=>{
        if(documentoRegistrado.statusCod){
           const obtenerId =await obtenerUltimoNumeroTabla();
           
-          await setOcOro(obtenerId.idUltimoDocumento - 1,nuevosRegistros.nuevasOc[i]);
-
-         
+          await setOcOro(obtenerId.idUltimoDocumento - 1,nuevosRegistros.nuevasOc[i]);  
        }
       }
-   
    } 
    return;
 }

@@ -1,5 +1,8 @@
 const { autenticarOro, obtenerDetalleOc } = require('./downloadInfo');
 const { obtenerDocumentoBynvSherpa } = require('./getInfoAws');
+const { updateDataOroSherpa } = require('./persistirS3');
+const AWS = require("aws-sdk");
+const logger = require('./logger');
 
 const axios = require('axios').default;
 
@@ -410,6 +413,7 @@ const updateEta = async(nv_sherpa,fecha)=>{
 }
   console.log("LLAMANDO UPDATE ETA");
   const document = await obtenerDocumentoBynvSherpa(nv_sherpa); 
+   const up = await updateDataOroSherpa(); 
 
   if(document.statusCod){
 
@@ -465,8 +469,42 @@ const updateEta = async(nv_sherpa,fecha)=>{
   return respuesta;
 }
 
+const persistenciaSistemaEta = async(id_nv_sherpa,id_documento,id_oro,nv_softnet)=>{
+  let DynamoDB = new AWS.DynamoDB.DocumentClient();
+  const tablaDynamo = "tbDocumentosOSS-dev";
+  var respuesta={
+    statusCod:true,
+    statusDesc:""
+  }
+
+  
+  let params = {
+    TableName:tablaDynamo,
+    Item:{
+      nv_sherpa:id_nv_sherpa,
+      id_oro:id_oro,
+      id_documento,
+      nv_softnet
+    }
+  };
+  try{     
+    const data= await DynamoDB.put(params).promise();
+    respuesta.statusDesc = data;
+    respuesta.statusCod=true;
+    console.log("====== OC MIGRADA CON EXITO =======");
+}catch(e){/**Error*/
+   console.log(e);
+    respuesta.statusCod="ERR";
+    respuesta.statusDesc=e.message;
+    logger.error(`HA OCURRIDO UN ERROR AL GUARDAR EL DOCUMENTO ${id_documento}`);
+  }
+  return respuesta;
+
+}
+
 module.exports = {
     saveProductOro,
-    updateEta
+    updateEta,
+    persistenciaSistemaEta
     
 }

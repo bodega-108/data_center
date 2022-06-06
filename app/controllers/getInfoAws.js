@@ -119,6 +119,41 @@ const obtenerListaDocumentos = async()=>{
       return respuesta;
 }
 
+
+const obtenerListaDocumentosSSO = async()=>{
+    let DynamoDB = new AWS.DynamoDB.DocumentClient();
+    const tablaDynamo = "tbDocumentosOSS-dev";
+
+    var respuesta={
+        statusCod:true,
+        statusDesc:""
+      }
+
+      let params = {
+        TableName:tablaDynamo
+    };
+
+    try{
+        const data= await DynamoDB.scan(params).promise();
+
+        if(data){
+            respuesta.statusCod=true;
+            respuesta.statusDesc="";
+            respuesta.documentos = data;
+        }else{
+            respuesta.statusCod=false;
+            respuesta.statusDesc=`No se encontraron registros`;
+        }
+
+    }catch(e){/**Error*/
+       
+        respuesta.statusCod="ERR";
+        respuesta.statusDesc=e.message;
+      }
+      
+     
+      return respuesta;
+}
 /**
  * 
  * @param {*} folio 
@@ -405,6 +440,32 @@ const obtenerDocumentoBynvSherpa = async(nv_sherpa)=>{
 }
 
 
+const obtenerDocumentosConstruidos = async() =>{
+    let respuesta = {
+        statusCod: true,
+        statusDesc: ""
+    };
+
+    let DynamoDB = new AWS.DynamoDB.DocumentClient();
+    const tablaDynamo = "tbDetalleDocumento-dev";
+
+    let params = {
+        TableName:tablaDynamo
+    };
+ 
+    try{
+        const data= await DynamoDB.scan(params).promise();
+        // console.log(data)
+        respuesta.listaOrdenes = data.Items;
+    }catch(e){/**Error*/
+       
+        respuesta.statusCod="ERR";
+        respuesta.statusDesc=`Error al intentar obtener documento ${e.message}`;
+      }
+     
+      return respuesta;
+}
+
 
 module.exports = {
     obtenerDetalleDocumento,
@@ -417,6 +478,8 @@ module.exports = {
     generarExcel,
     obtenerTodasLasOcBuildingCliente,
     obtenerFechaActualizacion,
-    obtenerDocumentoBynvSherpa
+    obtenerDocumentoBynvSherpa,
+    obtenerListaDocumentosSSO,
+    obtenerDocumentosConstruidos
     
 }

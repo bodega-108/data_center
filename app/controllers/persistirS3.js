@@ -1,9 +1,11 @@
 const AWS = require("aws-sdk");
 const { v4: uuidv4 } = require('uuid');
 const {ultimaOc,obtenerDetalleOc,obtenerTodasLasOc,obtenerProductosOC,buildDetailOc} = require('./downloadInfo');
-const { obtenerDetalleDocumento,obtenerIdDocumento,obtenerListaDocumentos } = require("./getInfoAws");
+const { obtenerDetalleDocumento,obtenerIdDocumento,obtenerListaDocumentos, obtenerListaDocumentosSSO, obtenerDocumentosConstruidos } = require("./getInfoAws");
 const {obtenerDetalleNv} = require('./infoSoftne');
-const { getInfochina } = require('./getInfoChina')
+const { getInfochina } = require('./getInfoChina');
+const { persistenciaSistemaEta } = require("./persistirOro");
+const logger = require("./logger");
 
 
 AWS_ACCESS_KEY_ID="AKIARR52ZBJVOD6O5KHE";
@@ -212,6 +214,43 @@ const setOcOro = async(id_documento,id)=>{
     }
     return respuesta;
 }
+
+/**
+ * Persistir data de oc oro
+ * @param {} id;
+ */
+ const insertNewOroOc = async(id_documento)=>{
+  let DynamoDB = new AWS.DynamoDB.DocumentClient();
+  const tablaDynamo = "tbDocumentosOSS-dev";
+  var respuesta={
+      statusCod:true,
+      statusDesc:""
+    }
+
+    try {
+          let params = {
+            TableName:tablaDynamo,
+              Item:{
+                "id_documento":id_documento,
+                "oc_oro": "",
+                "nv_softnet":"SIN NV ASOCIADA",
+                "nv_sherpa":"SIN NV SHERPA ASOCIADA"
+                
+              }
+            };
+            const data= await DynamoDB.put(params).promise();
+            respuesta.statusCod = true;
+            respuesta.statusDesc = "Registro almacenado con exito";
+
+    }catch(e){
+      console.log(e);
+      logger.error("HA OCURRIDO UN ERROR AL PERSISTER LA NV ASOCIADA")
+      respuesta.statusCod = false;
+      respuesta.statusDesc = `Ha ocurrido un error ${e.message}`;
+    }
+    return respuesta;
+}
+
 
 /**
  * Asociar nv a oc
@@ -616,7 +655,62 @@ const guardarActualizacionListaOc = async (id) =>{
     return respuesta;
 }
 
+const updateDataOroSherpa = async ()=>{
 
+  const listaAWS = await obtenerListaDocumentosSSO();
+  //const listaOcOro = await obtenerTodasLasOc();
+  const listaOcBuild = await obtenerDocumentosConstruidos();
+
+ // console.log(listaAWS.documentos.Items);
+  console.log(listaOcBuild.listaOrdenes.length);
+
+  if( listaOcBuild.listaOrdenes.length > listaAWS.documentos.Items.length ){
+    console.log("========= HAY NUEVOS REGISTROS =========");
+    
+    let idOroAWS = [];
+    for(let idOro of listaAWS.documentos.Items){
+      idOroAWS.push(idOro.id_oro);
+    }
+    let idAPersistir = [];
+    console.log(idOroAWS);
+    for(let i = 0; i < listaOcBuild.listaOrdenes.length ; i++){
+     // console.log(listaAWS.documentos.Items.length);
+     // console.log(listaOcOro.data.data[i].id);
+      //const match = listaAWS.documentos.Items.find( idaws => idaws.id_oro !== listaOcBuild.listaOrdenes[i].oc_oro.id_oc);
+      let id_sistema_oro = listaOcBuild.listaOrdenes[i].oc_oro.id_oc;
+      if(idOroAWS.includes(id_sistema_oro)){
+    
+        logger.warn(`NO PERSISTIMOS LA OC ${listaOcBuild.listaOrdenes[i].oc_oro.id_oc}`);
+      }else{
+      
+        if(listaOcBuild.listaOrdenes[i].nv_sherpa ==="SIN NV SHERPA ASOCIADA" || listaOcBuild.listaOrdenes[i].nv_sherpa ===  'No olvide ingresar Folio de Nota de Venta Valido<br>' ||
+        listaOcBuild.listaOrdenes[i].nv_sherpa === 'Nota de Venta no registrada<br>'){
+            logger.info(`EL DOCUMENTO ${listaOcBuild.listaOrdenes[i].id_documento} NO TIENE NV ASOCIADA`);
+        }else{
+          logger.info(listaOcBuild.listaOrdenes[i])
+          logger.info(`persistimos la oc ${listaOcBuild.listaOrdenes[i].oc_oro.id_oc}`);
+          let id_oc = listaOcBuild.listaOrdenes[i].oc_oro.id_oc;
+          let nv_sherpa_id =  listaOcBuild.listaOrdenes[i].nv_sherpa[0].detalle[0].folio;
+          let nv_sofnet = listaOcBuild.listaOrdenes[i].nv_sofnet;
+          let id_documento = listaOcBuild.listaOrdenes[i].id_documento.toString();
+
+          const perEta = await persistenciaSistemaEta(nv_sherpa_id,id_documento,id_oc,0);
+          if(perEta.statusCod){
+            logger.info(`INFO DOCUMENTO ${listaOcBuild.listaOrdenes[i].oc_oro.id_oc} ACTUALIZADO`)
+          }
+        }
+      }
+    }
+
+    logger.info("FIN DE LA ACTUALIZACIÓN");
+    return;
+
+  }else{
+    logger.warn('NO SE ENCONTRARON NUEVOS REGISTROS');
+    return;
+  }
+
+}
 
 module.exports = {
   migrateOroCommerce,
@@ -631,6 +725,7 @@ module.exports = {
   guardarMontoDeuda,
   guardarOcConstruida,
   migrarOcBuild,
-  guardarActualizacionListaOc
+  guardarActualizacionListaOc,
+  updateDataOroSherpa
   
 }
