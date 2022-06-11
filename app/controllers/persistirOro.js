@@ -1,6 +1,6 @@
 const { autenticarOro, obtenerDetalleOc } = require('./downloadInfo');
 const { obtenerDocumentoBynvSherpa } = require('./getInfoAws');
-const { updateDataOroSherpa } = require('./persistirS3');
+
 const AWS = require("aws-sdk");
 const logger = require('./logger');
 
@@ -408,57 +408,55 @@ const reqUpdateEta = async(id_oc,nv_sherpa,datos)=>{
 
 const updateEta = async(nv_sherpa,fecha)=>{
   let respuesta = {   
-    statusCod: true,
     statusDesc: "" 
 }
   console.log("LLAMANDO UPDATE ETA");
   const document = await obtenerDocumentoBynvSherpa(nv_sherpa); 
-   const up = await updateDataOroSherpa(); 
-
   if(document.statusCod){
-
-    let cuerpoUpdateEta = {
-      "data": {
-        "type": "orders",
-        "id": `${document.datos[0].id_oro}`,
-        "attributes": {
-          "eta_date": "",
-          "eta_updated": ""
+    for(let i = 0; i < document.datos.length; i++){
+      let cuerpoUpdateEta = {
+        "data": {
+          "type": "orders",
+          "id": `${document.datos[i].id_oro}`,
+          "attributes": {
+            "eta_date": "",
+            "eta_updated": ""
+          }
         }
       }
+
+      try {
+    
+        // PROCESAR ORDEN
+        //respuesta.orden = orden.data;
+        cuerpoUpdateEta.data.attributes.eta_date = fecha;
+        //generar fecha
+        var today = new Date();
+        var dd = String(today.getDate()).padStart(2, '0');
+        var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+        var hora = String(today.getHours()).padStart(2, '0');
+        var minutos = String(today.getMinutes()).padStart(2, '0');
+        var segundos = String(today.getSeconds()).padStart(2, '0');
+        var yyyy = today.getFullYear();
+    
+        cuerpoUpdateEta.data.attributes.eta_updated = `${yyyy}-${mm}-${dd}T${hora}:${minutos}:${segundos}Z`;
+       
+        
+        const updatePersistOro = await reqUpdateEta(document.datos[i].id_oro,nv_sherpa,cuerpoUpdateEta);
+    
+        if(updatePersistOro.statusCod) {
+          respuesta.statusDesc = `El ETA de la orden ha sido actualizado con exito`;
+        }else{
+          respuesta.statusDesc = `Ha ocurrido un error al actualizar ETA`;
+        }
+      } catch (error) {
+        console.error(error);
+        respuesta.statusDesc = "HA OCURRIDO UN ERROR ACTUALIZANDO EL ETA"
+      }
     }
 
-    try {
-    
-      // PROCESAR ORDEN
-      //respuesta.orden = orden.data;
-      cuerpoUpdateEta.data.attributes.eta_date = fecha;
-      //generar fecha
-      var today = new Date();
-      var dd = String(today.getDate()).padStart(2, '0');
-      var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
-      var hora = String(today.getHours()).padStart(2, '0');
-      var minutos = String(today.getMinutes()).padStart(2, '0');
-      var segundos = String(today.getSeconds()).padStart(2, '0');
-      var yyyy = today.getFullYear();
-  
-      cuerpoUpdateEta.data.attributes.eta_updated = `${yyyy}-${mm}-${dd}T${hora}:${minutos}:${segundos}Z`;
-     
-      
-      const updatePersistOro = await reqUpdateEta(document.datos[0].id_oro,nv_sherpa,cuerpoUpdateEta);
-  
-      if(updatePersistOro.statusCod) {
-        respuesta.statusCod = true;
-        respuesta.statusDesc = `El ETA de la orden ${document.datos[0].id_oro} ha sido actualizado con exito`;
-      }else{
-        respuesta.statusCod = false;
-        respuesta.statusDesc = `Ha ocurrido un error al actualizar ETA`;
-      }
-    } catch (error) {
-      console.error(error);
-      respuesta.statusCod = false;
-      respuesta.statusDesc = "HA OCURRIDO UN ERROR ACTUALIZANDO EL ETA"
-    }
+
+
   }else{
       respuesta.statusCod = false;
       respuesta.statusDesc = `No se encontraron documentos asociados a la nota de venta sherpa ${nv_sherpa}`;
