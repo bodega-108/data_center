@@ -12,6 +12,7 @@ const swaggerUI = require("swagger-ui-express");
 const swaggerJsDoc = require("swagger-jsdoc");
 
 const cron = require('node-cron');
+const logger = require('./app/controllers/logger');
 require('dotenv').config();
 
 const port = process.env.PORT;
@@ -119,7 +120,12 @@ const migrar = async()=>{
           await setOcOro(obtenerId.idUltimoDocumento - 1,nuevosRegistros.nuevasOc[i]);  
        }
       }
-   } 
-   return;
+      logger.info("Fin de la actualzación");
+      return;
+   } else{
+      
+      logger.info("Fin de la actualzación");
+      return;
+   }
+   
 }
-//migrar();

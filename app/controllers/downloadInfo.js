@@ -130,7 +130,7 @@ const obtenerDetalleOc = async(id_oc) => {
        let token = await autenticarOro();
        if(token){
            await axios.get(
-               `${process.env.ORO_SITE_PATH}/3m0nk_admin/api/orders?fields[customers]=1&page[number]=1&page[size]=200&sort=id`,
+               `${process.env.ORO_SITE_PATH}/3m0nk_admin/api/orders?fields[customers]=1&page[number]=1&page[size]=500&sort=id`,
                {headers: { 
                    'Authorization': `Bearer ${token.access_token}`,
                     'Content-Type': 'application/vnd.api+json'

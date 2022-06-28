@@ -1,11 +1,11 @@
 const AWS = require("aws-sdk");
-const { v4: uuidv4 } = require('uuid');
 const {ultimaOc,obtenerDetalleOc,obtenerTodasLasOc,obtenerProductosOC,buildDetailOc} = require('./downloadInfo');
 const { obtenerDetalleDocumento,obtenerIdDocumento,obtenerListaDocumentos, obtenerListaDocumentosSSO, obtenerDocumentosConstruidos } = require("./getInfoAws");
 const {obtenerDetalleNv} = require('./infoSoftne');
 const { getInfochina } = require('./getInfoChina');
 const { persistenciaSistemaEta } = require("./persistirOro");
 const logger = require("./logger");
+const { newNVADD, newNVADDSOFTNET } = require("./utils/utils");
 
 
 AWS_ACCESS_KEY_ID="AKIARR52ZBJVOD6O5KHE";
@@ -173,6 +173,7 @@ const setOcOro = async(id_documento,id)=>{
             TableName:tablaDynamo,
               Item:{
                 "id_documento":id_documento,
+                "id_oc_oro":id,
                 "oc_oro": "",
                 "nv_softnet":"SIN NV ASOCIADA",
                 "nv_sherpa":"SIN NV SHERPA ASOCIADA"
@@ -270,22 +271,38 @@ const asociarNv = async(id_documento,folio,mes,year,nv_sherpa) => {
   let detalleFacturaSoftnet;
   try {
       const detalleOcOro = await obtenerDetalleDocumento(id_documento);
-     if(folio === 0){
+      const newsNVSH = await newNVADD(detalleOcOro,nv_sherpa);
+      const newNVSS = await newNVADDSOFTNET(detalleOcOro,folio);
+
+      const dataNVSherpa = detalleOcOro.documentos.nv_sherpa;
+      const dataNVSoftnet = detalleOcOro.documentos.nv_softnet;
+     
+    if(folio === 0){
       detalleFacturaSoftnet = "SIN NV ASOCIADA";
      }else{
        detalleFacturaSoftnet = await obtenerDetalleNv(folio,mes,year);
+       if(newNVSS){
+        dataNVSoftnet.push(detalleFacturaSoftnet.data);
+       }
      }
      
+
+     if(newsNVSH || newNVSS){
       const notaVentaSherpa = await getInfochina(nv_sherpa);
-    
+      if(newsNVSH){
+        dataNVSherpa.push(notaVentaSherpa.data)
+      }
+  
+      
       if(detalleFacturaSoftnet.statusCod || detalleFacturaSoftnet === "SIN NV ASOCIADA") {
         let params = {
           TableName:tablaDynamo,
           Item:{
             "id_documento":id_documento,
             "oc_oro":detalleOcOro.documentos.oc_oro,
-            "nv_softnet":detalleFacturaSoftnet.data ? detalleFacturaSoftnet.data : "SIN NV ASOCIADA",
-            "nv_sherpa":notaVentaSherpa.statusCod ? notaVentaSherpa.data : "SIN NV SHERPA ASOCIADA"
+            "nv_softnet":detalleFacturaSoftnet.data ? dataNVSoftnet : "SIN NV ASOCIADA",
+            "nv_sherpa":notaVentaSherpa.statusCod ? dataNVSherpa : "SIN NV SHERPA ASOCIADA",
+            "id_oc_oro": detalleOcOro.documentos.oc_oro.id_oc
           }
         }
  
@@ -296,6 +313,12 @@ const asociarNv = async(id_documento,folio,mes,year,nv_sherpa) => {
         respuesta.statusCod = false;
         respuesta.statusDesc = "Ha ocurrido un error al asociar";
       }
+     }else{
+      respuesta.statusCod = false;
+      respuesta.statusDesc = "La nota de venta ya ha sido asociada"
+     }
+
+
   }catch(e) {
     console.log(e)
     respuesta.statusCod = false;
