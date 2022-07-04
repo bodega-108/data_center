@@ -8,7 +8,9 @@ const {getOCOro,getDetalleOCOro,
     getInfoChinaResponse,
     getProductosOro,
     crearProductoOro,
-    updateEtaOro
+    updateEtaOro,
+    eliminarNV,
+    eliminarNVS
 } = require('../controllers/oc');
 const { Router} = require('express');
 const { obtenerListaDocumentos } = require('../controllers/getInfoAws');
@@ -144,5 +146,7 @@ router.get('/migrar',migracionManual);
 router.get('/productos-oro/:id',getProductosOro);
 router.post('/crear-prodcuto-oro',crearProductoOro);
 router.patch('/update-eta',updateEtaOro);
+router.delete('/delete-nv-sherpa',eliminarNV);
+router.delete('/delete-nv-softnet',eliminarNVS);
 
 module.exports = router;

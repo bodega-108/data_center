@@ -1,7 +1,7 @@
 const { response } = require('express');
 const {obtenerOCListaCliente,obtenerDetalleOc, obtenerTodosLosProductos} = require('./downloadInfo');
 const {obtenerDetalleDocumento, obtenerListaDocumentos,generarExcel,obtenerTodasLasOcBuilding,obtenerFechaActualizacion} = require('./getInfoAws');
-const { asociarNv, crearDocumento,actualizarDocumento,migrar } = require('./persistirS3');
+const { asociarNv, crearDocumento,actualizarDocumento,migrar, deleteNVSherpa, deleteNVSoftnet } = require('./persistirS3');
 const path = require('path');
 const { getInfochina } = require('./getInfoChina');
 const { saveProductOro,updateEta } = require('./persistirOro');
@@ -239,6 +239,30 @@ const updateEtaOro = async(req, res) =>{
         message: updateEtaRq
     });
 }
+
+const eliminarNV = async(req, res)=>{
+
+    const {id_documento, nv_sherpa} = req.body;
+    const nv_eliminada = await deleteNVSherpa(id_documento, nv_sherpa);
+
+    res.json({
+        ok:true,
+        message: nv_eliminada.statusDesc,
+        document: nv_eliminada.document,
+    })
+}
+
+const eliminarNVS = async(req, res)=>{
+
+    const {id_documento, nv_softnet} = req.body;
+    const nv_eliminada = await deleteNVSoftnet(id_documento, nv_softnet);
+
+    res.json({
+        ok:true,
+        message: nv_eliminada.statusDesc,
+        document: nv_eliminada.document,
+    })
+}
 module.exports = {
     getOCOro,
     getDetalleOCOro,
@@ -253,5 +277,7 @@ module.exports = {
     migracionManual,
     getProductosOro,
     crearProductoOro,
-    updateEtaOro
+    updateEtaOro,
+    eliminarNV,
+    eliminarNVS
 };

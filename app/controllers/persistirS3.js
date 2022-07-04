@@ -274,15 +274,20 @@ const asociarNv = async(id_documento,folio,mes,year,nv_sherpa) => {
       const newsNVSH = await newNVADD(detalleOcOro,nv_sherpa);
       const newNVSS = await newNVADDSOFTNET(detalleOcOro,folio);
 
-      const dataNVSherpa = detalleOcOro.documentos.nv_sherpa;
-      const dataNVSoftnet = detalleOcOro.documentos.nv_softnet;
+      let dataNVSherpa = detalleOcOro.documentos.nv_sherpa;
+      let dataNVSoftnet = detalleOcOro.documentos.nv_softnet;
      
     if(folio === 0){
       detalleFacturaSoftnet = "SIN NV ASOCIADA";
      }else{
        detalleFacturaSoftnet = await obtenerDetalleNv(folio,mes,year);
        if(newNVSS){
-        dataNVSoftnet.push(detalleFacturaSoftnet.data);
+        if(typeof(dataNVSoftnet) === "string"){
+          dataNVSoftnet = [detalleFacturaSoftnet.data]
+        }else{
+
+        } dataNVSoftnet.push(detalleFacturaSoftnet.data);
+       
        }
      }
      
@@ -290,7 +295,12 @@ const asociarNv = async(id_documento,folio,mes,year,nv_sherpa) => {
      if(newsNVSH || newNVSS){
       const notaVentaSherpa = await getInfochina(nv_sherpa);
       if(newsNVSH){
-        dataNVSherpa.push(notaVentaSherpa.data)
+        if(typeof(dataNVSherpa) === 'string') {
+          dataNVSherpa = [notaVentaSherpa.data[0]];
+        }else{
+          dataNVSherpa.push(notaVentaSherpa.data[0])
+        }
+       
       }
   
       
@@ -684,9 +694,6 @@ const updateDataOroSherpa = async ()=>{
   //const listaOcOro = await obtenerTodasLasOc();
   const listaOcBuild = await obtenerDocumentosConstruidos();
 
- // console.log(listaAWS.documentos.Items);
-  console.log(listaOcBuild.listaOrdenes.length);
-
   if( listaOcBuild.listaOrdenes.length > listaAWS.documentos.Items.length ){
     console.log("========= HAY NUEVOS REGISTROS =========");
     
@@ -697,12 +704,10 @@ const updateDataOroSherpa = async ()=>{
     let idAPersistir = [];
     console.log(idOroAWS);
     for(let i = 0; i < listaOcBuild.listaOrdenes.length ; i++){
-     // console.log(listaAWS.documentos.Items.length);
-     // console.log(listaOcOro.data.data[i].id);
-      //const match = listaAWS.documentos.Items.find( idaws => idaws.id_oro !== listaOcBuild.listaOrdenes[i].oc_oro.id_oc);
+
       let id_sistema_oro = listaOcBuild.listaOrdenes[i].oc_oro.id_oc;
       if(idOroAWS.includes(id_sistema_oro)){
-    
+
         logger.warn(`NO PERSISTIMOS LA OC ${listaOcBuild.listaOrdenes[i].oc_oro.id_oc}`);
       }else{
       
@@ -713,7 +718,7 @@ const updateDataOroSherpa = async ()=>{
           logger.info(listaOcBuild.listaOrdenes[i])
           logger.info(`persistimos la oc ${listaOcBuild.listaOrdenes[i].oc_oro.id_oc}`);
           let id_oc = listaOcBuild.listaOrdenes[i].oc_oro.id_oc;
-          let nv_sherpa_id =  listaOcBuild.listaOrdenes[i].nv_sherpa[0].detalle[0].folio;
+          let nv_sherpa_id =  listaOcBuild.listaOrdenes[i].nv_sherpa[i].detalle[0].folio;
           let nv_sofnet = listaOcBuild.listaOrdenes[i].nv_sofnet;
           let id_documento = listaOcBuild.listaOrdenes[i].id_documento.toString();
 
@@ -735,6 +740,129 @@ const updateDataOroSherpa = async ()=>{
 
 }
 
+const deleteNVSherpa = async(id_documento, nv_sherpa)=>{
+
+  var respuesta={
+    statusCod:true,
+    statusDesc:""
+  }
+
+  try {
+    const getDocumente = await obtenerDetalleDocumento(id_documento);
+    let listNSSh = getDocumente.documentos.nv_sherpa.length;
+    
+    let newListNSSH = [];
+    let findDocuments= 0;
+    for(let i=0; i < listNSSh; i++) {
+
+      let nv_sherpa_aws = getDocumente.documentos.nv_sherpa[i].detalle[0].folio;
+        if(nv_sherpa === nv_sherpa){
+          findDocuments++
+        }
+      if(nv_sherpa_aws !== nv_sherpa){
+         
+          logger.info(`OC A ELIMINAR ${nv_sherpa_aws}`);
+          newListNSSH.push(getDocumente.documentos.nv_sherpa[i]);
+        }
+    }
+
+    if(findDocuments > 0){
+      if(newListNSSH.length === 0){
+        getDocumente.documentos.nv_sherpa = "SIN NV SHERPA ASOCIADA";
+      }else{
+        getDocumente.documentos.nv_sherpa = newListNSSH;
+      }
+  
+      const update = await updateDetalleDocumento(getDocumente);
+      
+    }
+    
+    respuesta.statusCod = true;
+    respuesta.statusDesc = "nv sherpa eliminada con exito";
+    respuesta.document = getDocumente;
+  } catch (error) {
+    throw new Error("Ha ocurrido un error obteniendo el documento")
+  }
+
+  return respuesta;
+}
+
+const deleteNVSoftnet = async(id_documento, nv_softnet) => {
+
+  var respuesta={
+    statusCod:true,
+    statusDesc:""
+  }
+
+  try {
+    const getDocumente = await obtenerDetalleDocumento(id_documento);
+    let listNSS = getDocumente.documentos.nv_softnet.length;
+    
+    let newListNSS = [];
+    let findDocuments= 0;
+    for(let i=0; i < listNSS; i++) {
+
+      let nv_softnet_aws = getDocumente.documentos.nv_softnet[i].idDoc.folio;
+        if(nv_softnet_aws === nv_softnet){
+          findDocuments++
+        }
+      if(nv_softnet_aws !== nv_softnet){
+         
+          logger.info(`OC A ELIMINAR ${nv_softnet}`);
+          newListNSS.push(getDocumente.documentos.nv_softnet[i]);
+        }
+    }
+
+    if(findDocuments > 0){
+      if(newListNSS.length === 0){
+        getDocumente.documentos.nv_softnet = "SIN NV ASOCIADA";
+      }else{
+        getDocumente.documentos.nv_softnet = newListNSS;
+      }
+  
+      const update = await updateDetalleDocumento(getDocumente);
+      
+    }
+    
+    respuesta.statusCod = true;
+    respuesta.statusDesc = "nv softnet eliminada con exito";
+    respuesta.document = getDocumente;
+  } catch (error) {
+    throw new Error("Ha ocurrido un error obteniendo el documento")
+  }
+
+  return respuesta;
+}
+
+
+const updateDetalleDocumento = async(new_document)=>{
+  let DynamoDB = new AWS.DynamoDB.DocumentClient();
+  const tablaDynamo = "tbDetalleDocumento-dev";
+
+  var respuesta={
+    statusCod:true,
+    statusDesc:""
+  }
+
+
+  try{
+    let params = {
+      TableName:tablaDynamo,
+      Item:new_document.documentos
+    }
+
+    const data= await DynamoDB.put(params).promise();
+    respuesta.statusCod = true;
+    respuesta.statusDesc = "Registro almacenado con exito";
+    logger.info("REGISTRO ALMACENADO CON EXITO!!!");
+  }catch(e){  
+    console.log("Error", e)
+    logger.error("HA ODUCRRIDO UN ERROR ACTUALIZANDO EL DOCUMENTO");
+    respuesta.statusCod = false;
+  }
+
+  return respuesta;
+}
 module.exports = {
   migrateOroCommerce,
   crearDocumento,
@@ -749,6 +877,8 @@ module.exports = {
   guardarOcConstruida,
   migrarOcBuild,
   guardarActualizacionListaOc,
-  updateDataOroSherpa
+  updateDataOroSherpa,
+  deleteNVSherpa,
+  deleteNVSoftnet
   
 }
