@@ -282,11 +282,12 @@ const asociarNv = async(id_documento,folio,mes,year,nv_sherpa) => {
      }else{
        detalleFacturaSoftnet = await obtenerDetalleNv(folio,mes,year);
        if(newNVSS){
+        
         if(typeof(dataNVSoftnet) === "string"){
           dataNVSoftnet = [detalleFacturaSoftnet.data]
         }else{
-
-        } dataNVSoftnet.push(detalleFacturaSoftnet.data);
+          dataNVSoftnet.push(detalleFacturaSoftnet.data);
+        } 
        
        }
      }
@@ -294,13 +295,17 @@ const asociarNv = async(id_documento,folio,mes,year,nv_sherpa) => {
 
      if(newsNVSH || newNVSS){
       const notaVentaSherpa = await getInfochina(nv_sherpa);
-      if(newsNVSH){
+      if(newsNVSH && notaVentaSherpa.data !== "SIN NV SHERPA ASOCIADA"){
         if(typeof(dataNVSherpa) === 'string') {
           dataNVSherpa = [notaVentaSherpa.data[0]];
         }else{
           dataNVSherpa.push(notaVentaSherpa.data[0])
         }
        
+      }
+
+      if(!newNVSS && notaVentaSherpa.data === "SIN NV SHERPA ASOCIADA"){
+
       }
   
       
