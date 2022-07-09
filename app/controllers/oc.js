@@ -70,12 +70,15 @@ const asociarNV = async(req, res= response) => {
     
         res.json({
             ok: true,
-            message: "Asociación realizada con exito"
+            message: "Asociación realizada con exito",
+            info: resultado.statusInfo
         });
     } else {
         res.status(500).json({
             ok:false,
-            message: "Ha ocurrido un error en asociar nv"
+            message: resultado.statusDesc,
+            info: resultado.statusInfo
+
         });
     }
 }

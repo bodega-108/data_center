@@ -16,6 +16,10 @@ const newNVADD = async(documento, nv_sherpa)=>{
         }
     }
 
+    if(nv_sherpa == 0){
+        nvSherpaAWS= false;
+    }
+
     return nvSherpaAWS;
 }
 const newNVADDSOFTNET = async(documento, nv_softnet)=>{

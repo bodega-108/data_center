@@ -304,11 +304,23 @@ const asociarNv = async(id_documento,folio,mes,year,nv_sherpa) => {
        
       }
 
-      if(!newNVSS && notaVentaSherpa.data === "SIN NV SHERPA ASOCIADA"){
+      if(folio === 0 && notaVentaSherpa.data === "SIN NV SHERPA ASOCIADA" ){
+          respuesta.statusCod = false;
+          respeusta.statusInfo = "No se ralizaron nuevos registros"
+          respuesta.statusDesc = "No se encontro nota de venta sherpa asociada";
+          return respuesta;
 
+      }else if( folio !== 0 && newNVSS && notaVentaSherpa.data === "SIN NV SHERPA ASOCIADA" ){
+        respuesta.statusInfo = "No se registró nv sherpa, se actualiza nv softnet"
+      }else if( folio !== 0 && newNVSS && notaVentaSherpa.data !== "SIN NV SHERPA ASOCIADA" ){
+        respuesta.statusInfo = "Se registraron o actualizaron las notas de venta sherpa - emonk"
+      }else if( !newNVSS && notaVentaSherpa.data === "SIN NV SHERPA ASOCIADA"){
+        respuesta.statusCod = false;
+        respuesta.statusInfo = "No se ralizaron nuevos registros"
+        respuesta.statusDesc = "No se encontro nota de venta sherpa asociada";
+        return respuesta;
       }
-  
-      
+
       if(detalleFacturaSoftnet.statusCod || detalleFacturaSoftnet === "SIN NV ASOCIADA") {
         let params = {
           TableName:tablaDynamo,
