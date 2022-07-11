@@ -229,7 +229,7 @@ const crearProductoOro = async (req, res) => {
  
      res.status(500).json({
          ok:false,
-         message:`ERROR al obtener lista de productos`
+         message: producto.statusDesc
      });
 }
 
