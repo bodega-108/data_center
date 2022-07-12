@@ -26,7 +26,7 @@ AWS.config.update({
  * @param idNVSherpa
  */
 const crearDocumento = async(idOcOro,idNVSoftnet,idNVSherpa)=>{
-    console.log("iniciando creacion de documento");
+    logger.info("iniciando creacion de documento");
     let DynamoDB = new AWS.DynamoDB.DocumentClient();
     const tablaDynamo = "tbDocumentoOc-dev";
 
@@ -100,7 +100,6 @@ const obtenerUltimoNumeroTabla = async()=>{
         respuesta.statusCod="ERR";
         respuesta.statusDesc=e.message;
       }
-      console.log(respuesta);
       return respuesta;
 }
 
@@ -110,7 +109,7 @@ const obtenerUltimoNumeroTabla = async()=>{
 const migrateOroCommerce = async()=>{
 
   const listaDeId = await ultimaOc();
-  console.log(listaDeId);
+
   try {
     let listadoDocumentos = await obtenerListaDocumentos(); 
     console.log(listadoDocumentos.documentos.Items[0].id_documento);
@@ -261,6 +260,7 @@ const setOcOro = async(id_documento,id)=>{
  * @param {} id_documento;
  */
 const asociarNv = async(id_documento,folio,mes,year,nv_sherpa) => {
+  logger.info("INICIO DE ASOCIACION DE DOCUMENTO")
   let DynamoDB = new AWS.DynamoDB.DocumentClient();
   const tablaDynamo = "tbDetalleDocumento-dev";
 
@@ -696,7 +696,7 @@ const guardarActualizacionListaOc = async (id) =>{
       const data= await DynamoDB.put(params).promise();
       respuesta.statusDesc = data;
       respuesta.statusCod=true;
-      console.log("====== ACTUALIZADO CON EXITO =======");
+      logger.info("====== ACTUALIZADO CON EXITO =======");
   }catch(e){/**Error*/
      console.log(e);
       respuesta.statusCod="ERR";
@@ -719,7 +719,7 @@ const updateDataOroSherpa = async ()=>{
       idOroAWS.push(idOro.id_oro);
     }
     let idAPersistir = [];
-    console.log(idOroAWS);
+
     for(let i = 0; i < listaOcBuild.listaOrdenes.length ; i++){
 
       let id_sistema_oro = listaOcBuild.listaOrdenes[i].oc_oro.id_oc;

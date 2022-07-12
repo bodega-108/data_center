@@ -446,7 +446,7 @@ const updateEta = async (nv_sherpa, fecha) => {
   let respuesta = {
     statusDesc: "",
   };
-  console.log("LLAMANDO UPDATE ETA");
+  logger.info("LLAMANDO UPDATE ETA");
   const document = await obtenerDocumentoBynvSherpa(nv_sherpa);
 
   if (!document.statusCod) {
@@ -497,12 +497,14 @@ const updateEta = async (nv_sherpa, fecha) => {
           );
 
           if (updatePersistOro.statusCod) {
+            respuesta.statusCod = true;
             respuesta.statusDesc = `El ETA de la orden ha sido actualizado con exito`;
+            respuesta.statusInfo = `Se ha actualizado ETA con la nv sherpa  ${nv_sherpa}`;
           } else {
             respuesta.statusDesc = `Ha ocurrido un error al actualizar ETA`;
           }
         } catch (error) {
-          console.error(error);
+          logger.error(error);
           respuesta.statusDesc = "HA OCURRIDO UN ERROR ACTUALIZANDO EL ETA";
         }
       }

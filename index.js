@@ -21,7 +21,7 @@ const app = express();
 //obtenerTodasLasOcBuildingCliente("Insumos medicos MyM SPA");
 
 const migracion = async () =>{
-   cron.schedule('*/30 * * * *',async()=>{
+   cron.schedule('* */60 * * *',async()=>{
       const migrate = await buildDetailOc();
       console.log("Actualizando lista de ordenes");
       console.log(migrate);
@@ -129,3 +129,4 @@ const migrar = async()=>{
    }
    
 }
+//migrar();

@@ -238,8 +238,9 @@ const updateEtaOro = async(req, res) =>{
     const updateEtaRq = await updateEta(nv_sherpa,fecha_eta);
 
     res.json({
-        ok:true,
-        message: updateEtaRq
+        ok:updateEtaRq.statusCod,
+        message: updateEtaRq.statusDesc,
+        info: updateEtaRq.statusInfo,
     });
 }
 
