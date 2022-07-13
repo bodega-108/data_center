@@ -3,6 +3,7 @@ const { obtenerDocumentoBynvSherpa } = require("./getInfoAws");
 
 const AWS = require("aws-sdk");
 const logger = require("./logger");
+const { getInfochina } = require("./getInfoChina");
 
 const axios = require("axios").default;
 
@@ -410,7 +411,7 @@ const reqUpdateEta = async (id_oc, nv_sherpa, datos) => {
   return respuesta;
 };
 
-const saveEtaHistory = async (nv_sherpa, status, fecha_eta) => {
+const saveEtaHistory = async (nv_sherpa, status, fecha_eta, data) => {
   let DynamoDB = new AWS.DynamoDB.DocumentClient();
   const tablaDynamo = "tbHistoryETANVSH-dev";
 
@@ -422,10 +423,11 @@ const saveEtaHistory = async (nv_sherpa, status, fecha_eta) => {
   let params = {
     TableName: tablaDynamo,
     Item: {
-      nv_sherpa:nv_sherpa.toString(),
+      nv_sherpa: nv_sherpa,
       status,
       fecha_eta,
-    },
+      data
+    }
   };
   try {
     const data = await DynamoDB.put(params).promise();
@@ -450,7 +452,8 @@ const updateEta = async (nv_sherpa, fecha) => {
   const document = await obtenerDocumentoBynvSherpa(nv_sherpa);
 
   if (!document.statusCod) {
-    const history_eta = await saveEtaHistory(nv_sherpa, "pending", fecha);
+    const nv_sherpa_from_china = await getInfochina(nv_sherpa);
+    const history_eta = await saveEtaHistory(nv_sherpa, "pending", fecha, nv_sherpa_from_china.data);
 
     if (history_eta.statusCod) {
       respuesta.statusCod = true;

@@ -1,7 +1,7 @@
 const { response } = require('express');
 const {obtenerOCListaCliente,obtenerDetalleOc, obtenerTodosLosProductos} = require('./downloadInfo');
 const {obtenerDetalleDocumento, obtenerListaDocumentos,generarExcel,obtenerTodasLasOcBuilding,obtenerFechaActualizacion} = require('./getInfoAws');
-const { asociarNv, crearDocumento,actualizarDocumento,migrar, deleteNVSherpa, deleteNVSoftnet } = require('./persistirS3');
+const { asociarNv,actualizarDocumento,migrar, deleteNVSherpa, deleteNVSoftnet } = require('./persistirS3');
 const path = require('path');
 const { getInfochina } = require('./getInfoChina');
 const { saveProductOro,updateEta } = require('./persistirOro');

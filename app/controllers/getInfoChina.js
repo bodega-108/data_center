@@ -1,3 +1,5 @@
+const { getETAInHistory } = require('./getInfoAws');
+
 const axios = require('axios').default;
 
 /**
@@ -11,6 +13,7 @@ const getInfochina = async(id_nv_sherpa)=>{
         statusDesc:""
     }
 
+    //const findHistoryETA = await getETAInHistory(id_nv_sherpa);
     const url = process.env.SHERPA_PATH;
 
     try{
